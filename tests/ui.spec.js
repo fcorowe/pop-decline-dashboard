@@ -5,12 +5,12 @@ const ready = async (page, hash = "") => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await page.goto("/" + hash);
+  await page.goto("./" + hash);
   await page.waitForSelector("body[data-ready]", { timeout: 15000 });
   return errors;
 };
 
-test("loads the map with every area and no errors", async ({ page }) => {
+test("loads the map with every area and no errors", { tag: "@smoke" }, async ({ page }) => {
   const errors = await ready(page);
   const n = await page.locator("#map path.region").count();
   expect(n).toBe(2042);
@@ -62,7 +62,7 @@ test("search finds a region and shows its story", async ({ page }) => {
   await expect(page).toHaveURL(/r=\d+/);
 });
 
-test("deep link restores mode, year and region", async ({ page }) => {
+test("deep link restores mode, year and region", { tag: "@smoke" }, async ({ page }) => {
   await ready(page, "#v=year&y=2011&r=7");
   await expect(page.locator("#tab-year")).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("#yearout")).toHaveText("2011");
@@ -120,4 +120,15 @@ test("total transfer stays within the lightweight budget", async ({ page }) => {
   await ready(page);
   // uncompressed; typical static hosts gzip this to ~0.5 MB
   expect(bytes).toBeLessThan(2.6 * 1024 * 1024);
+});
+
+
+test("live assets resolve under the project path", { tag: "@smoke" }, async ({ page }) => {
+  const errors = await ready(page);
+  expect(errors).toEqual([]);
+  const files = ["og.png", "favicon.svg", "data/regions.csv", "data/LICENSE.md"];
+  for (const file of files) {
+    const response = await page.request.get(new URL(file, page.url()).href);
+    expect(response.ok(), file).toBe(true);
+  }
 });

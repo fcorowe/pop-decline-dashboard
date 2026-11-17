@@ -13,7 +13,7 @@
     "social-card": "node scripts/render_social_card.mjs"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@fontsource/atkinson-hyperlegible-next": "5.3.0",

@@ -77,3 +77,15 @@ The build skips the characteristics when `../Paper 2 - Place attributes.csv` is 
 Blank values remain missing. Numeric percentiles use the midrank among declining areas with an observed value. The Drivers table compares within-signature medians and the most common settlement type. The supplied 2011 coast variable is distinct from the Natural Earth comparison.
 
 To regenerate the 1,200 × 630 social image, start `npm run serve` and run `npm run social-card` in another terminal.
+
+## Deployment and licence
+
+GitHub Actions runs the data and Chromium suites before deploying `site/` to [GitHub Pages](https://fcorowe.github.io/pop-decline-dashboard/). The CI job tests the committed derived bundle. The local determinism test requires the raw files.
+
+Run smoke tests against the published project path:
+
+```bash
+BASE_URL=https://fcorowe.github.io/pop-decline-dashboard/ npx playwright test --grep @smoke
+```
+
+The [MIT licence](LICENSE) covers the dashboard code. The [derived data licence](DATA-LICENSE.md) is CC BY 4.0 and provides the study citations. The font and JavaScript dependencies retain their own licences in `site/fonts/` and `site/vendor/`.
