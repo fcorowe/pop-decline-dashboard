@@ -131,3 +131,4 @@ Claude inspected every fuzzy match and judged all of them correct. No two source
 |---|---|---|
 | 2026-11-17 | Claude | Read both papers and the raw data; designed and built the dashboard, the data pipeline and the tests; 72/72 tests pass; wrote CODEX_PROMPT.md and this log. |
 | | Codex | *(append entries here: date, what changed, tests status, open questions)* |
+| 2026-11-17 | Codex | Part 1. Committed ten approved macOS screenshots before changing the application, pinned dependencies, verified byte-identical data rebuilds, and reduced the D3 bundle from 281 KB to 113 KB. All ten screenshots passed against the original baselines. The original UI suite intermittently lost its local server connection, so browser tests now bind explicitly to IPv4. |

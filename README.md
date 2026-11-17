@@ -42,11 +42,14 @@ tests/ui.spec.js           end-to-end tests on 2 desktop + 3 phone profiles
 ## Commands
 
 ```bash
-npm install                 # mapshaper, Playwright, D3 sources
+python3 -m pip install -r requirements.txt
+npm ci                      # exact dependencies from package-lock.json
 npx playwright install chromium
-npm run build:data          # = python3 scripts/build_data.py  (needs pandas, geopandas)
+npm run data                # rebuild from the raw inputs one folder up
+npm run build:vendor        # rebuild the checked-in D3 subset when dependencies change
 npm run serve               # http://localhost:8000
-npm test                    # data tests + 65 UI tests
+npm test                    # data, determinism, UI and visual tests
+npm run snapshots           # update expected images after reviewing intentional changes
 ```
 
 ## Known data issues (see data/build_report.json)

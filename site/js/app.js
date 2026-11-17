@@ -107,10 +107,15 @@
   }
 
   // ---------------------------------------------------------------- load
+  async function loadJSON(url) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}: ${url}`);
+    return response.json();
+  }
   Promise.all([
-    d3.json("data/regions.topo.json"),
-    d3.json("data/regions.json"),
-    d3.json("data/signatures.json"),
+    loadJSON("data/regions.topo.json"),
+    loadJSON("data/regions.json"),
+    loadJSON("data/signatures.json"),
   ]).then(([topo, data, sig]) => {
     DATA = data; SIGDATA = sig;
     BY_ID = new Map(data.regions.map((r) => [r.id, r]));

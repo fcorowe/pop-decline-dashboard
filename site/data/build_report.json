@@ -8,17 +8,9 @@
   "Mayotte",
   "Guadeloupe"
  ],
+ "paper1_states_extra": 27,
  "paper1_trajectories": {
-  "rows": 696,
-  "matched": 695,
-  "match_method": {
-   "code": 467,
-   "name+country": 158,
-   "fuzzy": 70
-  },
-  "unmatched": [
-   "RS Srednjobanatska (nan)"
-  ],
+  "duplicate_targets": [],
   "fuzzy_matches": [
    "DE Regiolverband Saarbrücken -> Regionalverband Saarbrücken",
    "DK Vesthimmerlands -> Vesthimmerland",
@@ -91,19 +83,19 @@
    "RU Mari El Republic -> Mariy-El",
    "RU Udmurtia -> Udmurt"
   ],
-  "duplicate_targets": []
- },
- "paper1_states_extra": 27,
- "paper2_rates": {
-  "rows": 732,
-  "matched": 731,
   "match_method": {
-   "name+country": 625,
-   "fuzzy": 106
+   "code": 467,
+   "fuzzy": 70,
+   "name+country": 158
   },
+  "matched": 695,
+  "rows": 696,
   "unmatched": [
-   "RS Srednjobanatska"
-  ],
+   "RS Srednjobanatska (nan)"
+  ]
+ },
+ "paper2_rates": {
+  "duplicate_targets": [],
   "fuzzy_matches": [
    "DE Neustadt an der Waldnaab -> Neustadt a. d. Waldnaab",
    "DE Wunsiedel im Fichtelgebirge -> Wunsiedel i. Fichtelgebirge",
@@ -212,13 +204,20 @@
    "CZ Uherské Hradišt? -> Uherske Hradiste",
    "CZ Ž?ár nad Sázavou -> Zdar nad Sázavou"
   ],
-  "duplicate_targets": [],
-  "signature_overridden_from_rates_file": 0
+  "match_method": {
+   "fuzzy": 106,
+   "name+country": 625
+  },
+  "matched": 731,
+  "rows": 732,
+  "signature_overridden_from_rates_file": 0,
+  "unmatched": [
+   "RS Srednjobanatska"
+  ]
  },
  "sizes_kb": {
-  "build_report.json": 7,
+  "regions.json": 551,
   "regions.topo.json": 1086,
-  "signatures.json": 3,
-  "regions.json": 551
+  "signatures.json": 3
  }
 }

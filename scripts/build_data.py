@@ -98,7 +98,7 @@ def main():
     report = {}
 
     # ---- backbone: geometry + mergesheet ---------------------------------
-    g = gpd.read_file(raw / "Map.gpkg").reset_index(drop=True)
+    g = gpd.read_file(raw / "Map.gpkg", fid_as_index=True).sort_index().reset_index(drop=True)
     g["id"] = g.index.astype(int)
     g["k"] = g["name"].map(norm)
 
@@ -229,37 +229,37 @@ def main():
             "migration": [r1(v, 3) for v in grp["mig.3ya"]],
             "total": [r1(v, 3) for v in grp["rate.3ya"]],
         }
-    (out / "signatures.json").write_text(json.dumps(sig, separators=(",", ":"), allow_nan=False))
+    (out / "signatures.json").write_text(json.dumps(sig, sort_keys=True, separators=(",", ":"), allow_nan=False))
 
     # ---- write attributes --------------------------------------------------
     (out / "regions.json").write_text(json.dumps(
         {"years": {"states": YEARS_STATE, "rates": YEARS_RATE},
          "trajectories": TRAJ, "signatures": SIG,
-         "regions": [{k: v for k, v in r.items() if v is not None} for r in rec.values()]}, separators=(",", ":"), ensure_ascii=False, allow_nan=False))
+         "regions": [{k: v for k, v in r.items() if v is not None} for r in rec.values()]}, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False))
 
     flat = []
-    for v in rec.values():
+    for _, v in sorted(rec.items()):
         row = {key: v[key] for key in ("id", "name", "country", "code", "coast", "change")}
         row["trajectory"] = TRAJ[v["trajectory"]] if v["trajectory"] is not None else ""
         row["signature"] = SIG[v["signature"]] if v["signature"] else ""
         for y, st in zip(YEARS_STATE, v["states"] or [None] * 18):
             row[f"state_{y}"] = st
         flat.append(row)
-    pd.DataFrame(flat).to_csv(out / "regions.csv", index=False)
+    pd.DataFrame(flat).to_csv(out / "regions.csv", index=False, lineterminator="\n")
 
     # ---- geometry: simplify with mapshaper -> TopoJSON ---------------------
     tmp = out / "_tmp_regions.geojson"
     gg = b[["id", "geometry"]].copy()
     gg["geometry"] = gg.geometry.make_valid()
     gg.to_file(tmp, driver="GeoJSON")
-    cmd = ["npx", "mapshaper", str(tmp), "-simplify", a.simplify, "weighted", "keep-shapes",
+    cmd = ["node", str(ROOT / "node_modules" / "mapshaper" / "bin" / "mapshaper"), str(tmp), "-simplify", a.simplify, "weighted", "keep-shapes",
            "-filter-slivers", "-rename-layers", "regions",
            "-o", str(out / "regions.topo.json"), "format=topojson", "quantization=10000"]
     subprocess.run(cmd, check=True, cwd=ROOT)
     tmp.unlink()
 
-    report["sizes_kb"] = {p.name: round(p.stat().st_size / 1024) for p in out.glob("*.json")}
-    (out / "build_report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False))
+    report["sizes_kb"] = {p.name: round(p.stat().st_size / 1024) for p in sorted(out.glob("*.json")) if p.name != "build_report.json"}
+    (out / "build_report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False, sort_keys=True))
     print(json.dumps({k2: (v2 if not isinstance(v2, dict) else {x: (y if not isinstance(y, list) else len(y)) for x, y in v2.items()})
                       for k2, v2 in report.items() if k2 != "backbone_without_country"}, indent=1))
     print("backbone without country:", len(report["backbone_without_country"]))
