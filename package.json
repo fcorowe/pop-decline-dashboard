@@ -9,11 +9,13 @@
     "test:ui": "playwright test",
     "data": "python3 scripts/build_data.py",
     "snapshots": "playwright test tests/visual.spec.js --project=desktop --project=iphone --update-snapshots",
-    "build:vendor": "node scripts/build_vendor.mjs"
+    "build:vendor": "node scripts/build_vendor.mjs",
+    "social-card": "node scripts/render_social_card.mjs"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@fontsource/atkinson-hyperlegible-next": "5.3.0",
     "@playwright/test": "1.65.1",
     "d3-array": "3.2.5",

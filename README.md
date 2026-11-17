@@ -2,7 +2,7 @@
 
 A lightweight, public-facing interactive dashboard of the two GDSL papers:
 
-- Newsham & Rowe (2022) *Understanding trajectories of population decline across rural and urban Europe: a sequence analysis*. Population, Space and Place. https://doi.org/10.1002/psp.2630
+- Newsham & Rowe (2023, first published online in 2022) *Understanding trajectories of population decline across rural and urban Europe: a sequence analysis*. Population, Space and Place 29(3), e2630. https://doi.org/10.1002/psp.2630
 - Newsham & Rowe (2025) *The demographic causes of European sub-national population declines*. European Journal of Population 41:10. https://doi.org/10.1007/s10680-025-09730-0
 
 ## What it does
@@ -34,7 +34,9 @@ site/                 ← deploy this folder as-is (GitHub Pages, Netlify, unive
   data/regions.csv         public download
   data/build_report.json   join diagnostics (do not need to deploy)
 scripts/build_data.py      rebuilds site/data from the raw files one folder up
-scripts/name_crosswalk.csv manual name matches (transliteration, encoding losses)
+scripts/name_crosswalk.csv explicit manual and reviewed fuzzy matches
+scripts/geometry_overrides.csv documented boundary-label corrections
+data_review/               fuzzy match scores and coastal comparison
 tests/test_data.py         data integrity (counts reproduce the papers' tables)
 tests/ui.spec.js           end-to-end tests on 2 desktop + 3 phone profiles
 ```
@@ -52,9 +54,26 @@ npm test                    # data, determinism, UI and visual tests
 npm run snapshots           # update expected images after reviewing intentional changes
 ```
 
-## Known data issues (see data/build_report.json)
+## Data joins and caveats
 
-- **Srednjobanatska (Serbia)** cannot be placed: the boundary file contains two "Severnobanatska/Severno-Banatski" polygons and no Srednjobanatska, so one is probably mislabelled. 1 trajectory area and 1 signature area are therefore missing from the map.
-- 70 (Paper 1) and 106 (Paper 2) areas were matched by fuzzy name within country (Serbian, Russian, Lithuanian, Polish and Czech names, many with characters lost in the CSV export). All are listed in the build report for checking; 30 more are fixed by hand in `scripts/name_crosswalk.csv`.
-- The `Coast` flag in `Map.gpkg` marks some landlocked areas (e.g. North Ossetia) as coastal, so it is kept in the data but not shown in the interface.
-- The place attributes in Paper 2's regression (share aged 65+, foreign-born, unemployment, distance to a large city and to the coast, altitude, urban–rural type) are not in the raw folder yet; adding them would let the dashboard show "what sort of place" each area is.
+- All 696 trajectory areas and 732 signature areas match the published counts. Boundary centroids place the polygon labelled `Severnobanatska` closest to Zrenjanin, so the build relabels it as `Srednjobanatska` (Central Banat). The distinct `Severno-Banatski` polygon represents Northern Banat, and `Juznobanatska` represents Southern Banat. The original GeoPackage is unchanged.
+- Fuzzy matches from the handover are explicit in `scripts/name_crosswalk.csv`. The build rejects any new acceptable fuzzy candidate until its match is recorded. The review CSV lists each accepted source–boundary pair and the name similarity score. A score measures spelling similarity and does not establish geographic equivalence.
+- The Paper 2 demographic rates file determines the signature. The current build finds zero disagreements with the map mergesheet among the 732 joined areas. The build report records the two values and area name for any disagreement.
+- The simplified map keeps all 2,042 boundaries. Christiansø is restored from its original geometry because its rings collapse during simplification. The restoration refines the TopoJSON grid without shifting other boundaries. Chukotka's source rings are already split at the antimeridian.
+- The boundary file flags some landlocked areas as coastal, including North Ossetia. The separate `coast_km` estimate measures minimum polygon-to-shoreline distance, rounded to 0.1 km, from exterior rings of dissolved [Natural Earth 1:10m land polygons, v5.1.1](https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/). It excludes interior lakes and the artificial antimeridian seam. Distances use an azimuthal equidistant projection centred on each area's largest polygon. Boundaries that touch or cross the shoreline have distance zero. Differences in shoreline resolution can affect small islands and coastal margins. Both measures are withheld from the interface pending confirmation of the definition in Paper 2.
+- Rebuilding requires the original research files in the parent directory. The first rebuild downloads and verifies the pinned Natural Earth archive in `.cache/`. For offline rebuilding, supply that archive with `python3 scripts/build_data.py --land /path/to/ne_10m_land.zip`.
+
+## Optional 2011 place characteristics
+
+The build skips the characteristics when `../Paper 2 - Place attributes.csv` is absent. Supply a UTF-8 CSV with `code` or `name` and `country` for each area, plus these columns:
+
+| Field | Unit or values |
+|---|---|
+| `aged_65_pct`, `foreign_born_pct`, `unemployment_pct` | Percentages on a 0–100 scale |
+| `distance_city_1m_km`, `distance_coast_km` | Kilometres |
+| `mean_altitude_m` | Metres |
+| `settlement_type` | `urban`, `intermediate` or `rural` |
+
+Blank values remain missing. Numeric percentiles use the midrank among declining areas with an observed value. The Drivers table compares within-signature medians and the most common settlement type. The supplied 2011 coast variable is distinct from the Natural Earth comparison.
+
+To regenerate the 1,200 × 630 social image, start `npm run serve` and run `npm run social-card` in another terminal.

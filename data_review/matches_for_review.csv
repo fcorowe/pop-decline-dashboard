@@ -1,0 +1,117 @@
+source_name,map_name,country,similarity_score
+Montana,Monta,BG,0.8
+B?eclav,Breclav,CZ,0.857143
+Havlí?k?v Brod,Havlickuv Brod,CZ,0.814815
+Jind?ich?v Hradec,Jindrichuv Hradec,CZ,0.875
+Nový Ji?ín,Novy Jicin,CZ,0.8
+P?erov,Prerov,CZ,0.833333
+Pelh?imov,Pelhrimov,CZ,0.888889
+Plze?-jih,Plzen - jih,CZ,0.875
+Prost?jov,Prostejov,CZ,0.888889
+Uherské Hradišt?,Uherske Hradiste,CZ,0.903226
+Ž?ár nad Sázavou,Zdar nad Sázavou,CZ,0.875
+Neustadt an der Waldnaab,Neustadt a. d. Waldnaab,DE,0.923077
+Regiolverband Saarbrücken,Regionalverband Saarbrücken,DE,0.961538
+Wunsiedel im Fichtelgebirge,Wunsiedel i. Fichtelgebirge,DE,0.978723
+Vesthimmerlands,Vesthimmerland,DK,0.965517
+Aitoloakarnania,Aitoloakarnia,EL,0.923077
+"Grevena, Kozani","Greve, Kozani",EL,0.909091
+Alytaus apskritis,Alytaus,LT,1.0
+Kauno apskritis,Kauno,LT,1.0
+Klaipedos apskritis,Klaipedos,LT,1.0
+Marijampoles apskritis,Marijampoles,LT,1.0
+Panevezio apskritis,Panevezio,LT,1.0
+Siauliu apskritis,Siauliu,LT,1.0
+Taurages apskritis,Taurages,LT,1.0
+Telsiu apskritis,Telsiu,LT,1.0
+Utenos apskritis,Utenos,LT,1.0
+Vilniaus apskritis,Vilniaus,LT,1.0
+Mun. Balti,Balti,ML,1.0
+?YRARDOWSKI,Zyrardowski,PL,0.875
+CHE?MSKO-ZAMOJSKI,Chelmsko-zamojski,PL,0.923077
+CZ?STOCHOWSKI,Czestochowski,PL,0.9
+ELBL?SKI,Elblaski,PL,0.8
+INOWROC?AWSKI,Inowroclawski,PL,0.9
+LEGNICKO-G?OGOWSKI,Legnicko-glogowski,PL,0.928571
+PU?AWSKI,Pulawski,PL,0.8
+SANDOMIERSKO-J?DRZEJOWSKI,Sandomiersko-jedrzejowski,PL,0.952381
+WA?BRZYSKI,Walbrzyski,PL,0.857143
+Borska,Borski,RS,1.0
+Brani?evska,Branicevski,RS,0.875
+Branicevska,Branicevski,RS,1.0
+Jablani?ka,Jablanicki,RS,0.875
+Jablanicka,Jablanicki,RS,1.0
+Kolubarska,Kolubarski,RS,1.0
+Ma?vanska,Macvanski,RS,0.833333
+Macvanska,Macvanski,RS,1.0
+Moravi?ka,Moravicki,RS,0.857143
+Moravicka,Moravicki,RS,1.0
+Nišavska,Nisavski,RS,0.909091
+P?injska,Pcinjski,RS,0.8
+Pcinjska,Pcinjski,RS,1.0
+Pirotska,Pirotski,RS,1.0
+Podunavska,Podunavski,RS,1.0
+Pomoravska,Pomoravski,RS,1.0
+Rasinska,Rasinski,RS,1.0
+Severnoba?ka,Severno-Backi,RS,0.9
+Severnobacka,Severno-Backi,RS,1.0
+Sremska,Sremski,RS,1.0
+Topli?ka,Toplicki,RS,0.833333
+Toplicka,Toplicki,RS,1.0
+Zaje?arska,Zajecarski,RS,0.857143
+Zajecarska,Zajecarski,RS,1.0
+Zapadnoba?ka,Zapadno-Backi,RS,0.9
+Zapadnobacka,Zapadno-Backi,RS,1.0
+Zlatiborska,Zlatiborski,RS,1.0
+Šumadijska,Sumadijski,RS,0.933333
+Altai region,Altay,RU,1.0
+Amur region,Amur,RU,1.0
+Arhangelsk region,Arkhangel'sk,RU,1.0
+Bryansk region,Bryansk,RU,1.0
+Chelyabinsk region,Chelyabinsk,RU,1.0
+Chukotka Autonomous Okrug,Chukot,RU,1.0
+Irkutsk region,Irkutsk,RU,1.0
+Ivanovo region,Ivanovo,RU,1.0
+Kabardino-Balkarian Republic,Kabardin-Balkar,RU,0.875
+Kaluga region,Kaluga,RU,1.0
+Kamchatka Krai,Kamchatka,RU,1.0
+Khabarovsk region,Khabarovsk,RU,1.0
+Kirov region,Kirov,RU,1.0
+Komi Republic,Komi,RU,1.0
+Kostroma region,Kostroma,RU,1.0
+Krasnoyarsk region,Krasnoyarsk,RU,1.0
+Kurgan region,Kurgan,RU,1.0
+Kursk region,Kursk,RU,1.0
+Lipetsk region,Lipetsk,RU,1.0
+Mari El Republic,Mariy-El,RU,0.923077
+Murmansk region,Murmansk,RU,1.0
+Novgorod region,Novgorod,RU,1.0
+Omsk region,Omsk,RU,1.0
+Orenburg region,Orenburg,RU,1.0
+Penza region,Penza,RU,1.0
+Perm region,Perm',RU,1.0
+Primorsky Krai,Primor'ye,RU,0.923077
+Pskov region,Pskov,RU,1.0
+Republic of Bashkortostan,Bashkortostan,RU,0.928571
+Republic of Kalmykia,Kalmyk,RU,0.8
+Republic of Karelia,Karelia,RU,0.857143
+Rostov region,Rostov,RU,1.0
+Ryazan Oblast,Ryazan',RU,1.0
+Sakhalin Oblast,Sakhalin,RU,1.0
+Samara Region,Samara,RU,1.0
+Saratov region,Saratov,RU,1.0
+Smolensk region,Smolensk,RU,1.0
+Sverdlovsk region,Sverdlovsk,RU,1.0
+Tambov Region,Tambov,RU,1.0
+Tula region,Tula,RU,1.0
+Tver region,Tver',RU,1.0
+Udmurtia,Udmurt,RU,0.923077
+Ulyanovsk region,Ul'yanovsk,RU,1.0
+Vladimir region,Vladimir,RU,1.0
+Volgograd region,Volgograd,RU,1.0
+Vologda Region,Vologda,RU,1.0
+Voronezh region,Voronezh,RU,1.0
+Zabaykalsky Krai,Zabaykal'ye,RU,0.941176
+Jämtlands län,Jämtlands,SE,0.833333
+Norrbottens län,Norrbottens,SE,0.846154
+Västernorrlands län,Västernorrlands,SE,0.888889

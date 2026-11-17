@@ -19,12 +19,22 @@ Outputs (site/data/):
 Usage: python3 scripts/build_data.py [--raw ../] [--out site/data]
 Requires: pandas, geopandas, and Node with mapshaper (npm i) for simplification.
 """
-import argparse, difflib, json, re, subprocess, sys, unicodedata
+import argparse
+import difflib
+import json
+import math
+import re
+import sys
+import unicodedata
 from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+
+from build_geometry import build_geometry
+from coast_distance import LAND_VERSION, coast_distances
+from place_attributes import merge_attributes
 
 ROOT = Path(__file__).resolve().parents[1]
 ENC = "cp1252"  # the CSVs were exported from Excel on Windows
@@ -78,7 +88,7 @@ def clean_geo(v):
 def num(v):
     try:
         f = float(v)
-        return None if np.isnan(f) else f
+        return f if math.isfinite(f) else None
     except (TypeError, ValueError):
         return None
 
@@ -87,15 +97,82 @@ def r1(v, d=1):
     return None if v is None or (isinstance(v, float) and np.isnan(v)) else round(float(v), d)
 
 
+def country_code(value):
+    value = value.strip()
+    names = {name.casefold(): code for code, name in COUNTRY.items()}
+    aliases = {"GB": "UK", "GR": "EL", "BY": "BR", "MD": "ML", "UA": "UN", "AD": "AN"}
+    return names.get(value.casefold(), aliases.get(value.upper(), value.upper()))
+
+
+def make_locator(backbone, crosswalk, review):
+    by_geo = {v: i for i, v in zip(backbone.id, backbone.geo) if isinstance(v, str)}
+    by_cn = {(c, k): i for i, c, k in zip(backbone.id, backbone.country, backbone.k)}
+    name_counts = backbone.k.value_counts()
+    by_name = {k: i for i, k in zip(backbone.id, backbone.k) if name_counts[k] == 1}
+    by_country = {}
+    for row in backbone.itertuples():
+        by_country.setdefault(row.country, []).append((row.name, fuzzy_key(row.name)))
+    approved = {}
+    for row in crosswalk.itertuples():
+        key = (row.country, norm(row.source_name))
+        match = (norm(row.map_name), row.method)
+        if row.method not in {"manual", "fuzzy-reviewed"} or approved.get(key, match) != match:
+            raise ValueError(f"Invalid or conflicting crosswalk entry: {row.country} {row.source_name}")
+        approved[key] = match
+
+    def locate(geo, country, name):
+        code = clean_geo(geo)
+        if code in by_geo:
+            return by_geo[code], "code"
+        if not isinstance(name, str) or not name.strip():
+            return None, None
+        key = norm(name)
+        if (country, key) in approved:
+            target, method = approved[(country, key)]
+            if (country, target) not in by_cn:
+                raise ValueError(f"Crosswalk points to an unknown area: {country} {name} -> {target}")
+            region_id = by_cn[(country, target)]
+            if method == "fuzzy-reviewed":
+                map_name = backbone.at[region_id, "name"]
+                review.add((name, map_name, country, round(difflib.SequenceMatcher(
+                    None, fuzzy_key(name), fuzzy_key(map_name)).ratio(), 6)))
+            return region_id, method
+        if (country, key) in by_cn:
+            return by_cn[(country, key)], "name+country"
+        if key in by_name and (not isinstance(country, str) or
+                backbone.at[by_name[key], "country"] == country or
+                pd.isna(backbone.at[by_name[key], "country"])):
+            return by_name[key], "name"
+        fuzzy = fuzzy_key(name)
+        scored = sorted(((difflib.SequenceMatcher(None, fuzzy, candidate).ratio(), label)
+                         for label, candidate in by_country.get(country, [])), reverse=True)
+        if scored and scored[0][0] >= 0.8 and (len(scored) == 1 or scored[0][0] - scored[1][0] >= 0.08):
+            score, target = scored[0]
+            raise ValueError(f"Unreviewed fuzzy match: {country} {name} -> {target} ({score:.3f})")
+        return None, None
+
+    return locate
+
+
+def require_complete(dataset, missing, duplicates):
+    if missing or duplicates:
+        raise ValueError(f"{dataset}: unmatched {missing}; duplicate targets {duplicates}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default=str(ROOT.parent))
     ap.add_argument("--out", default=str(ROOT / "site" / "data"))
     ap.add_argument("--simplify", default="1.5%")
+    ap.add_argument("--land", type=Path, default=ROOT / ".cache" / "ne_10m_land.zip")
+    ap.add_argument("--review-out", type=Path)
     a = ap.parse_args()
     raw, out = Path(a.raw), Path(a.out)
-    out.mkdir(parents=True, exist_ok=True)
+    review_out = a.review_out or out.parent / "data_review"
+    if a.review_out is None and out.resolve() == ROOT / "site" / "data":
+        review_out = ROOT / "data_review"
     report = {}
+    review = set()
 
     # ---- backbone: geometry + mergesheet ---------------------------------
     g = gpd.read_file(raw / "Map.gpkg", fid_as_index=True).sort_index().reset_index(drop=True)
@@ -112,40 +189,13 @@ def main():
     report["backbone_areas"] = len(b)
     report["backbone_without_country"] = b.loc[b.country.isna(), "name"].tolist()
 
-    # lookup helpers: GEO code first, then country+name, then name alone if unique
-    by_geo = {v: i for i, v in zip(b.id, b.geo) if v}
-    by_cn = {(c, k): i for i, c, k in zip(b.id, b.country, b.k)}
-    name_counts = b.k.value_counts()
-    by_n = {k: i for i, k in zip(b.id, b.k) if name_counts[k] == 1}
-
-    # manual crosswalk for names that differ by language/transliteration
-    xw = {}
-    xw_path = ROOT / "scripts" / "name_crosswalk.csv"
-    if xw_path.exists():
-        for _, r in pd.read_csv(xw_path).iterrows():
-            xw[(r["country"], norm(r["source_name"]))] = norm(r["map_name"])
-
-    by_country = {}
-    for i, c, n in zip(b.id, b.country, b.name):
-        by_country.setdefault(c, []).append((i, fuzzy_key(n)))
-
-    def locate(geo, country, name):
-        geo = clean_geo(geo)
-        if geo and geo in by_geo:
-            return by_geo[geo], "code"
-        k = norm(name)
-        k = xw.get((country, k), k)
-        if (country, k) in by_cn:
-            return by_cn[(country, k)], "name+country"
-        if k in by_n:
-            return by_n[k], "name"
-        # fuzzy, restricted to the same country; accept only a clear winner
-        fk = fuzzy_key(name)
-        scored = sorted(((difflib.SequenceMatcher(None, fk, ck).ratio(), i)
-                         for i, ck in by_country.get(country, [])), reverse=True)
-        if scored and scored[0][0] >= 0.8 and (len(scored) == 1 or scored[0][0] - scored[1][0] >= 0.08):
-            return scored[0][1], "fuzzy"
-        return None, None
+    overrides = pd.read_csv(ROOT / "scripts" / "geometry_overrides.csv")
+    for override in overrides.itertuples():
+        if b.at[override.id, "name"] != override.original_name:
+            raise ValueError(f"Geometry override no longer matches feature {override.id}")
+        b.loc[override.id, ["name", "k"]] = [override.map_name, norm(override.map_name)]
+    report["geometry_overrides"] = overrides.to_dict("records")
+    locate = make_locator(b, pd.read_csv(ROOT / "scripts" / "name_crosswalk.csv"), review)
 
     rec = {int(i): {"id": int(i), "name": n, "country": c if isinstance(c, str) else None,
                     "countryName": COUNTRY.get(c) if isinstance(c, str) else None,
@@ -160,23 +210,22 @@ def main():
     c = pd.read_csv(raw / "Paper 1 - Clusters.csv", encoding=ENC)
     state_cols = [col for col in c.columns if re.match(r"^\d\d/\d\d$", col)]
     assert len(state_cols) == 18, state_cols
-    miss, how, fuzzy, dup = [], {}, [], []
+    miss, how, dup = [], {}, []
     for _, r in c.iterrows():
         i, h = locate(r["GEO"], r["Country"], r["Name"])
         if i is None:
             miss.append(f'{r["Country"]} {r["Name"]} ({r["GEO"]})'); continue
         how[h] = how.get(h, 0) + 1
-        if h == "fuzzy":
-            fuzzy.append(f'{r["Country"]} {r["Name"]} -> {rec[i]["name"]}')
         if rec[i]["trajectory"] is not None:
             dup.append(f'{r["Name"]} -> {rec[i]["name"]}')
         rec[i]["trajectory"] = TRAJ.index(r["cl1.4fac_"])
         rec[i]["states"] = [STATE_TEXT.get(r[col]) if isinstance(r[col], str) else None
                             for col in state_cols]
         rec[i]["change"] = num(r["Diff"])
+    require_complete("Paper 1 trajectories", miss, dup)
     report["paper1_trajectories"] = {"rows": len(c), "matched": len(c) - len(miss),
                                      "match_method": how, "unmatched": miss,
-                                     "fuzzy_matches": fuzzy, "duplicate_targets": dup}
+                                     "duplicate_targets": dup}
 
     s = pd.read_csv(raw / "Paper 1 - PopChangeStates.csv", encoding=ENC)
     s = s[s["Name"].notna()]
@@ -192,14 +241,12 @@ def main():
 
     # ---- Paper 2: demographic rates --------------------------------------
     d = pd.read_csv(raw / "Paper 2 - Demographic Rates.csv", encoding=ENC)
-    miss, how, sigdiff, fuzzy, dup = [], {}, 0, [], []
+    miss, how, sigdiff, dup = [], {}, [], []
     for _, r in d.iterrows():
         i, h = locate(None, r["Country"], r["Name.x"])
         if i is None:
             miss.append(f'{r["Country"]} {r["Name.x"]}'); continue
         how[h] = how.get(h, 0) + 1
-        if h == "fuzzy":
-            fuzzy.append(f'{r["Country"]} {r["Name.x"]} -> {rec[i]["name"]}')
         if rec[i]["rates"] is not None:
             dup.append(f'{r["Name.x"]} -> {rec[i]["name"]}')
         rec[i]["rates"] = {
@@ -208,12 +255,48 @@ def main():
             "mig": [r1(num(r[f"NM{y}"])) for y in YEARS_RATE],
             "change": [r1(num(r[f"R.imp{y}"])) for y in YEARS_RATE],
         }
-        if rec[i]["signature"] != int(r["cluster"]):
-            sigdiff += 1
-            rec[i]["signature"] = int(r["cluster"])
-    report["paper2_rates"] = {"rows": len(d), "matched": len(d) - len(miss),
-                              "match_method": how, "unmatched": miss, "fuzzy_matches": fuzzy, "duplicate_targets": dup,
-                              "signature_overridden_from_rates_file": sigdiff}
+        rate_cluster = int(r["cluster"])
+        if rec[i]["signature"] != rate_cluster:
+            sigdiff.append({"id": i, "name": rec[i]["name"], "country": r["Country"],
+                            "mergesheet": rec[i]["signature"], "rates": rate_cluster})
+        rec[i]["signature"] = rate_cluster
+    require_complete("Paper 2 demographic rates", miss, dup)
+    mergesheet_only = []
+    for region in rec.values():
+        if region["signature"] is not None and region["rates"] is None:
+            mergesheet_only.append({"id": region["id"], "name": region["name"],
+                                    "signature": region["signature"]})
+            region["signature"] = None
+    report["paper2_rates"] = {
+        "rows": len(d), "matched": len(d), "match_method": how, "unmatched": miss,
+        "duplicate_targets": dup, "signature_disagreements": sorted(sigdiff, key=lambda row: row["id"]),
+        "signature_overridden_from_rates_file": len(sigdiff), "mergesheet_only": mergesheet_only,
+    }
+    report["place_attributes"] = merge_attributes(
+        raw / "Paper 2 - Place attributes.csv", locate, rec, country_code
+    )
+
+    # Distance to Natural Earth land exteriors, independent of the gpkg flag.
+    for region, distance in zip(rec.values(), coast_distances(b.geometry, a.land), strict=True):
+        region["coast_km"] = distance
+    report["coast"] = {"source": "Natural Earth 1:10m land", "version": LAND_VERSION,
+                       "method": "Minimum polygon-to-exterior shoreline distance in local AEQD (km)"}
+    report["fuzzy_review_pairs"] = len(review)
+
+    out.mkdir(parents=True, exist_ok=True)
+    report["geometry_restored_after_simplification"] = build_geometry(
+        b, ROOT / "node_modules" / "mapshaper" / "bin" / "mapshaper",
+        a.simplify, out / "regions.topo.json"
+    )
+    review_out.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(sorted(review, key=lambda r: (r[2], r[0].casefold(), r[0], r[1])),
+                 columns=["source_name", "map_name", "country", "similarity_score"]).to_csv(
+        review_out / "matches_for_review.csv", index=False, lineterminator="\n"
+    )
+    pd.DataFrame([{key: row[key] for key in ("id", "name", "country", "coast", "coast_km")}
+                  for row in rec.values()]).rename(columns={"coast": "gpkg_coast"}).to_csv(
+        review_out / "coast_comparison.csv", index=False, lineterminator="\n"
+    )
 
     # ---- Paper 2: signature-level components -----------------------------
     k = pd.read_csv(raw / "Paper 2 - Cluster Components.csv")
@@ -239,7 +322,7 @@ def main():
 
     flat = []
     for _, v in sorted(rec.items()):
-        row = {key: v[key] for key in ("id", "name", "country", "code", "coast", "change")}
+        row = {key: v[key] for key in ("id", "name", "country", "code", "coast", "coast_km", "change")}
         row["trajectory"] = TRAJ[v["trajectory"]] if v["trajectory"] is not None else ""
         row["signature"] = SIG[v["signature"]] if v["signature"] else ""
         for y, st in zip(YEARS_STATE, v["states"] or [None] * 18):
@@ -247,18 +330,10 @@ def main():
         flat.append(row)
     pd.DataFrame(flat).to_csv(out / "regions.csv", index=False, lineterminator="\n")
 
-    # ---- geometry: simplify with mapshaper -> TopoJSON ---------------------
-    tmp = out / "_tmp_regions.geojson"
-    gg = b[["id", "geometry"]].copy()
-    gg["geometry"] = gg.geometry.make_valid()
-    gg.to_file(tmp, driver="GeoJSON")
-    cmd = ["node", str(ROOT / "node_modules" / "mapshaper" / "bin" / "mapshaper"), str(tmp), "-simplify", a.simplify, "weighted", "keep-shapes",
-           "-filter-slivers", "-rename-layers", "regions",
-           "-o", str(out / "regions.topo.json"), "format=topojson", "quantization=10000"]
-    subprocess.run(cmd, check=True, cwd=ROOT)
-    tmp.unlink()
-
-    report["sizes_kb"] = {p.name: round(p.stat().st_size / 1024) for p in sorted(out.glob("*.json")) if p.name != "build_report.json"}
+    report["sizes_kb"] = {
+        filename: round((out / filename).stat().st_size / 1024)
+        for filename in ("regions.json", "regions.topo.json", "signatures.json")
+    }
     (out / "build_report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False, sort_keys=True))
     print(json.dumps({k2: (v2 if not isinstance(v2, dict) else {x: (y if not isinstance(y, list) else len(y)) for x, y in v2.items()})
                       for k2, v2 in report.items() if k2 != "backbone_without_country"}, indent=1))

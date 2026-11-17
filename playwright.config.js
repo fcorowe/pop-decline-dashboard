@@ -5,11 +5,11 @@ module.exports = defineConfig({
   testDir: "tests",
   testMatch: /.*\.spec\.js/,
   timeout: 30000,
-  workers: 2,
+  workers: 1,
   reporter: [["list"]],
   use: { baseURL: "http://127.0.0.1:8766" },
   webServer: {
-    command: "python3 -m http.server 8766 --bind 127.0.0.1 -d site",
+    command: "python3 -m http.server 8766 --bind 127.0.0.1 --protocol HTTP/1.1 -d site",
     port: 8766,
     reuseExistingServer: true,
     stdout: "ignore",

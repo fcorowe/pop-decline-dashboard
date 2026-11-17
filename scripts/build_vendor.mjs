@@ -8,7 +8,7 @@ const { metafile } = await build({
   stdin: {
     resolveDir: root,
     contents: `
-      export { extent, max, min, rollup } from "d3-array";
+      export { extent, max, median, min, rollup } from "d3-array";
       export { color } from "d3-color";
       export { format } from "d3-format";
       export { geoAzimuthalEqualArea, geoPath } from "d3-geo";

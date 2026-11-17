@@ -1,0 +1,4 @@
+code,name,country,aged_65_pct,foreign_born_pct,unemployment_pct,distance_city_1m_km,distance_coast_km,mean_altitude_m,settlement_type
+BY001,,,20,4,7,150,300,180,urban
+,Dibër,Albania,30,1,10,75,60,650,rural
+,Minsk,BY,10,7,5,0,275,200,intermediate

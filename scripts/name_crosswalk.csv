@@ -1,31 +1,148 @@
-country,source_name,map_name,note
-RU,Nizhny Novgorod Region,Nizhegorod,transliteration
-RU,Kemerovo Region - Kuzbass,Kemerovo,transliteration
-RU,Magadan Region,Maga Buryatdan,boundary file label for Magadan
-RU,Oryol Region,Orel,transliteration
-RU,Yaroslavskaya oblast,Yaroslavl',transliteration
-RU,The Republic of Buryatia,Buryat,transliteration
-RU,The Republic of Mordovia,Mordovia,transliteration
-RU,The Republic of Khakassia,Khakass,transliteration
-RU,Chuvash Republic - Chuvashia,Chuvash,transliteration
-RU,Jewish Autonomous Region,Yevrey,transliteration
-IS,Northwest,Norðurland vestra,English vs Icelandic name
-IS,Westfjords,Vestfirðir,English vs Icelandic name
-CZ,Brno-mesto,Brno,city district
-CZ,Brno-m?sto,Brno,city district (encoding loss in source)
-CZ,?eská Lípa,Ceska Lipa,encoding loss in source
-CZ,D??ín,Decin,encoding loss in source
-CZ,Krom??íž,Kromeriz,encoding loss in source
-CZ,T?ebí?,Trebic,encoding loss in source
-PL,KRO?NIE?SKI,Krosnienski,encoding loss in source
-PL,?ÓD?,Miasto Lodz,encoding loss in source
-PL,?OM?Y?SKI,Lomzynski,encoding loss in source
-PL,OSTRO??CKI,Ostrolecki,encoding loss in source
-PL,O?WI?CIMSKI,Oswiecimski,encoding loss in source
-PL,P?OCKI,Plocki,encoding loss in source
-PL,POZNA?,Miasto Poznan,encoding loss in source
-PL,SZCZECIN,Miasto Szczecin,city
-PL,SZCZECI?SKI,Szczecinski,encoding loss in source
-PL,W?OC?AWSKI,Wloclawski,encoding loss in source
-DE,"Weiden in der Oberpfalz, Kreisfreie Stadt","Weiden i. d. Opf, Kreisfreie Stadt",abbreviation
-ML,Calarasi,Calarasi.M,Moldovan Calarasi (distinct from Romanian Calarasi)
+country,source_name,map_name,method,note
+BG,Montana,Monta,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,?eská Lípa,Ceska Lipa,manual,encoding loss in source
+CZ,B?eclav,Breclav,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Brno-m?sto,Brno,manual,city district (encoding loss in source)
+CZ,Brno-mesto,Brno,manual,city district
+CZ,D??ín,Decin,manual,encoding loss in source
+CZ,Havlí?k?v Brod,Havlickuv Brod,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Jind?ich?v Hradec,Jindrichuv Hradec,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Krom??íž,Kromeriz,manual,encoding loss in source
+CZ,Nový Ji?ín,Novy Jicin,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,P?erov,Prerov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Pelh?imov,Pelhrimov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Plze?-jih,Plzen - jih,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Prost?jov,Prostejov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,T?ebí?,Trebic,manual,encoding loss in source
+CZ,Uherské Hradišt?,Uherske Hradiste,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+CZ,Ž?ár nad Sázavou,Zdar nad Sázavou,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+DE,Neustadt an der Waldnaab,Neustadt a. d. Waldnaab,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+DE,Regiolverband Saarbrücken,Regionalverband Saarbrücken,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+DE,"Weiden in der Oberpfalz, Kreisfreie Stadt","Weiden i. d. Opf, Kreisfreie Stadt",manual,abbreviation
+DE,Wunsiedel im Fichtelgebirge,Wunsiedel i. Fichtelgebirge,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+DK,Vesthimmerlands,Vesthimmerland,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+EL,Aitoloakarnania,Aitoloakarnia,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+EL,"Grevena, Kozani","Greve, Kozani",fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+IS,Northwest,Norðurland vestra,manual,English vs Icelandic name
+IS,Westfjords,Vestfirðir,manual,English vs Icelandic name
+LT,Alytaus apskritis,Alytaus,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Kauno apskritis,Kauno,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Klaipedos apskritis,Klaipedos,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Marijampoles apskritis,Marijampoles,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Panevezio apskritis,Panevezio,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Siauliu apskritis,Siauliu,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Taurages apskritis,Taurages,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Telsiu apskritis,Telsiu,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Utenos apskritis,Utenos,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+LT,Vilniaus apskritis,Vilniaus,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+ML,Calarasi,Calarasi.M,manual,Moldovan Calarasi (distinct from Romanian Calarasi)
+ML,Mun. Balti,Balti,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,?OM?Y?SKI,Lomzynski,manual,encoding loss in source
+PL,?YRARDOWSKI,Zyrardowski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,?ÓD?,Miasto Lodz,manual,encoding loss in source
+PL,CHE?MSKO-ZAMOJSKI,Chelmsko-zamojski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,CZ?STOCHOWSKI,Czestochowski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,ELBL?SKI,Elblaski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,INOWROC?AWSKI,Inowroclawski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,KRO?NIE?SKI,Krosnienski,manual,encoding loss in source
+PL,LEGNICKO-G?OGOWSKI,Legnicko-glogowski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,O?WI?CIMSKI,Oswiecimski,manual,encoding loss in source
+PL,OSTRO??CKI,Ostrolecki,manual,encoding loss in source
+PL,P?OCKI,Plocki,manual,encoding loss in source
+PL,POZNA?,Miasto Poznan,manual,encoding loss in source
+PL,PU?AWSKI,Pulawski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,SANDOMIERSKO-J?DRZEJOWSKI,Sandomiersko-jedrzejowski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+PL,SZCZECI?SKI,Szczecinski,manual,encoding loss in source
+PL,SZCZECIN,Miasto Szczecin,manual,city
+PL,W?OC?AWSKI,Wloclawski,manual,encoding loss in source
+PL,WA?BRZYSKI,Walbrzyski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Borska,Borski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Brani?evska,Branicevski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Branicevska,Branicevski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Jablani?ka,Jablanicki,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Jablanicka,Jablanicki,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Kolubarska,Kolubarski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Ma?vanska,Macvanski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Macvanska,Macvanski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Moravi?ka,Moravicki,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Moravicka,Moravicki,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Nišavska,Nisavski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,P?injska,Pcinjski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Pcinjska,Pcinjski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Pirotska,Pirotski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Podunavska,Podunavski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Pomoravska,Pomoravski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Rasinska,Rasinski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Severnoba?ka,Severno-Backi,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Severnobacka,Severno-Backi,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Severnobanatska,Severno-Banatski,manual,Northern Banat polygon near Kikinda; the former namesake is Central Banat
+RS,Sremska,Sremski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Topli?ka,Toplicki,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Toplicka,Toplicki,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Zaje?arska,Zajecarski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Zajecarska,Zajecarski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Zapadnoba?ka,Zapadno-Backi,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Zapadnobacka,Zapadno-Backi,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Zlatiborska,Zlatiborski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RS,Šumadijska,Sumadijski,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Altai region,Altay,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Amur region,Amur,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Arhangelsk region,Arkhangel'sk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Bryansk region,Bryansk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Chelyabinsk region,Chelyabinsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Chukotka Autonomous Okrug,Chukot,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Chuvash Republic - Chuvashia,Chuvash,manual,transliteration
+RU,Irkutsk region,Irkutsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Ivanovo region,Ivanovo,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Jewish Autonomous Region,Yevrey,manual,transliteration
+RU,Kabardino-Balkarian Republic,Kabardin-Balkar,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kaluga region,Kaluga,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kamchatka Krai,Kamchatka,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kemerovo Region - Kuzbass,Kemerovo,manual,transliteration
+RU,Khabarovsk region,Khabarovsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kirov region,Kirov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Komi Republic,Komi,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kostroma region,Kostroma,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Krasnoyarsk region,Krasnoyarsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kurgan region,Kurgan,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Kursk region,Kursk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Lipetsk region,Lipetsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Magadan Region,Maga Buryatdan,manual,boundary file label for Magadan
+RU,Mari El Republic,Mariy-El,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Murmansk region,Murmansk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Nizhny Novgorod Region,Nizhegorod,manual,transliteration
+RU,Novgorod region,Novgorod,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Omsk region,Omsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Orenburg region,Orenburg,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Oryol Region,Orel,manual,transliteration
+RU,Penza region,Penza,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Perm region,Perm',fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Primorsky Krai,Primor'ye,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Pskov region,Pskov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Republic of Bashkortostan,Bashkortostan,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Republic of Kalmykia,Kalmyk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Republic of Karelia,Karelia,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Rostov region,Rostov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Ryazan Oblast,Ryazan',fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Sakhalin Oblast,Sakhalin,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Samara Region,Samara,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Saratov region,Saratov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Smolensk region,Smolensk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Sverdlovsk region,Sverdlovsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Tambov Region,Tambov,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,The Republic of Buryatia,Buryat,manual,transliteration
+RU,The Republic of Khakassia,Khakass,manual,transliteration
+RU,The Republic of Mordovia,Mordovia,manual,transliteration
+RU,Tula region,Tula,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Tver region,Tver',fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Udmurtia,Udmurt,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Ulyanovsk region,Ul'yanovsk,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Vladimir region,Vladimir,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Volgograd region,Volgograd,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Vologda Region,Vologda,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Voronezh region,Voronezh,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+RU,Yaroslavskaya oblast,Yaroslavl',manual,transliteration
+RU,Zabaykalsky Krai,Zabaykal'ye,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+SE,Jämtlands län,Jämtlands,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+SE,Norrbottens län,Norrbottens,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv
+SE,Västernorrlands län,Västernorrlands,fuzzy-reviewed,Retained from the reviewed handover matches; see data_review/matches_for_review.csv

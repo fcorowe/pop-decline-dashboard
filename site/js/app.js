@@ -52,13 +52,15 @@
   const NODATA = css("--land-nodata");
   const COMP = { fert: css("--c-fert"), mort: css("--c-mort"), mig: css("--c-mig"), nat: css("--c-nat") };
 
+  const CONFIG = { showCoast: false };
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const fmt = d3.format(",");
   const fmt1 = d3.format("+.1f");
   const isMobile = () => window.matchMedia("(max-width: 899px)").matches;
 
   // ---------------------------------------------------------------- state
   const S = { mode: "traj", year: 2001, sel: null, filter: null, playing: null, k: 1 };
-  let DATA, BY_ID, SIGDATA, paths, gMap, svg, zoom, path, features;
+  let DATA, BY_ID, SIGDATA, paths, gMap, svg, zoom, path, features, placeStats;
 
   const $ = (s) => document.querySelector(s);
   const el = (tag, attrs = {}, html = "") => {
@@ -118,6 +120,7 @@
     loadJSON("data/signatures.json"),
   ]).then(([topo, data, sig]) => {
     DATA = data; SIGDATA = sig;
+    placeStats = summarisePlaces(data.regions);
     BY_ID = new Map(data.regions.map((r) => [r.id, r]));
     features = topojson.feature(topo, topo.objects.regions).features
       .filter((f) => BY_ID.has(f.properties.id));
@@ -160,20 +163,28 @@
     gMap.append("path").attr("class", "sel-halo");
     gMap.append("path").attr("class", "sel");
 
-    zoom = d3.zoom().scaleExtent([0.6, 40]).translateExtent([[-W, -H], [2 * W, 2 * H]])
+    zoom = d3.zoom().duration(reducedMotion.matches ? 0 : 250).scaleExtent([0.6, 40]).translateExtent([[-W, -H], [2 * W, 2 * H]])
       .on("zoom", (ev) => {
         gMap.attr("transform", ev.transform);
-        S.k = ev.transform.k;
-        defs.selectAll("pattern").attr("patternTransform", `rotate(45) scale(${1 / Math.max(1, S.k ** 0.85)})`);
+        if (S.k !== ev.transform.k) {
+          S.k = ev.transform.k;
+          defs.selectAll("pattern").attr("patternTransform", `rotate(45) scale(${1 / Math.max(1, S.k ** 0.85)})`);
+        }
         hideTip();
       });
     svg.call(zoom).on("dblclick.zoom", null);
     svg.on("click", () => { if (S.sel != null) select(null); });
 
-    $("#pill").onclick = () => $("#content").scrollIntoView({ behavior: "smooth", block: "start" });
-    $("#zin").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1.8);
-    $("#zout").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1 / 1.8);
-    $("#zreset").onclick = () => svg.transition().duration(350).call(zoom.transform, d3.zoomIdentity);
+    $("#pill").onclick = () => $("#content").scrollIntoView({
+      behavior: reducedMotion.matches ? "instant" : "smooth", block: "start",
+    });
+    $("#zin").onclick = () => moveMap(250, zoom.scaleBy, 1.8);
+    $("#zout").onclick = () => moveMap(250, zoom.scaleBy, 1 / 1.8);
+    $("#zreset").onclick = () => moveMap(350, zoom.transform, d3.zoomIdentity);
+  }
+
+  function moveMap(duration, action, ...args) {
+    (reducedMotion.matches ? svg.interrupt() : svg.transition().duration(duration)).call(action, ...args);
   }
 
   function paintMap() {
@@ -191,7 +202,7 @@
     const [[x0, y0], [x1, y1]] = path.bounds(f);
     const k = Math.min(10, 0.35 / Math.max((x1 - x0) / W, (y1 - y0) / H));
     const kk = Math.max(k, 2.2);
-    svg.transition().duration(600).call(zoom.transform,
+    moveMap(600, zoom.transform,
       d3.zoomIdentity.translate(W / 2, H / 2).scale(kk).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
   }
 
@@ -213,9 +224,39 @@
 
   // ---------------------------------------------------------------- UI wiring
   function initUI() {
-    document.querySelectorAll(".modes button").forEach((b) => {
-      b.addEventListener("click", () => setMode(b.dataset.mode));
+    const tabs = [...document.querySelectorAll('[role="tab"]')];
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => setMode(tab.dataset.mode));
+      tab.addEventListener("keydown", (event) => {
+        const destinations = {
+          ArrowLeft: (index + tabs.length - 1) % tabs.length,
+          ArrowRight: (index + 1) % tabs.length,
+          Home: 0,
+          End: tabs.length - 1,
+        };
+        if (!Object.hasOwn(destinations, event.key)) return;
+        event.preventDefault();
+        const next = tabs[destinations[event.key]];
+        setMode(next.dataset.mode);
+        next.focus();
+      });
     });
+    const updateMotion = () => {
+      zoom.duration(reducedMotion.matches ? 0 : 250);
+      $("#play").disabled = reducedMotion.matches;
+      if (reducedMotion.matches) {
+        svg.interrupt();
+        stop();
+      }
+    };
+    reducedMotion.addEventListener("change", updateMotion);
+    updateMotion();
+
+    $(".skip").addEventListener("click", (event) => {
+      event.preventDefault();
+      $("#panel").focus();
+    });
+    $("#about-open").addEventListener("click", () => $("#about").showModal());
     const yr = $("#year");
     yr.addEventListener("input", () => { setYear(+yr.value); stop(); });
     $("#play").addEventListener("click", () => (S.playing ? stop() : play()));
@@ -226,21 +267,30 @@
     dl.innerHTML = opts.map((o) => `<option value="${esc(o.label)}"></option>`).join("");
     const byLabel = new Map(opts.map((o) => [o.label.toLowerCase(), o.r.id]));
     const q = $("#q");
+    let handlingSearch = false;
     const go = () => {
       const v = q.value.trim().toLowerCase();
-      if (!v) return;
+      if (!v || handlingSearch) return;
       let id = byLabel.get(v);
       if (id == null) {
         const hit = opts.find((o) => o.label.toLowerCase().startsWith(v)) || opts.find((o) => o.label.toLowerCase().includes(v));
         id = hit?.r.id;
       }
-      if (id != null) { select(id, true); q.blur(); }
+      if (id != null) {
+        handlingSearch = true;
+        try {
+          select(id, true);
+          $(".place h2.name").focus();
+        } finally {
+          handlingSearch = false;
+        }
+      }
     };
     q.addEventListener("change", go);
     q.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
 
     window.addEventListener("hashchange", () => { readHash(); render(); });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.sel != null) select(null); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#about").open && S.sel != null) select(null); });
   }
 
   function setMode(m) {
@@ -251,10 +301,16 @@
   function setYear(y) {
     S.year = y; $("#year").value = y; $("#yearout").textContent = y;
     paintMap();
-    if (S.mode === "year") { renderLegend(); if (S.sel == null) renderOverview(); else highlightYear(); }
+    if (S.mode === "year") {
+      const focusedChip = document.activeElement.closest("#legend .chip")?.dataset.k;
+      renderLegend();
+      if (focusedChip != null) $(`#legend .chip[data-k="${focusedChip}"]`)?.focus({ preventScroll: true });
+      if (S.sel == null) renderOverview(); else highlightYear();
+    }
     writeHash();
   }
   function play() {
+    if (reducedMotion.matches) return;
     if (S.year >= 2018) setYear(2001);
     $("#play").textContent = "❚❚"; $("#play").setAttribute("aria-label", "Pause");
     S.playing = setInterval(() => { if (S.year >= 2018) return stop(); setYear(S.year + 1); }, 750);
@@ -266,13 +322,18 @@
   function select(id, zoomIn = false) {
     S.sel = id; writeHash(); paintMap(); renderPanel();
     if (id == null) $("#pill").hidden = true;
-    if (id != null && zoomIn) {
-      zoomTo(id);
-      // from search: on phones jump straight to the story; on taps keep the map in view
-      if (isMobile()) setTimeout(() => $("#content").scrollIntoView({ behavior: "smooth", block: "start" }), 650);
-    }
+    if (id != null && zoomIn) zoomTo(id);
   }
-  function setFilter(c) { S.filter = S.filter === c ? null : c; paintMap(); renderLegend(); if (S.sel == null) renderOverview(); }
+  function setFilter(c) {
+    const active = document.activeElement;
+    const selector = active.matches(".chip") ? ".chip" : active.matches(".rowbtn") ? ".rowbtn" : null;
+    const focusedKey = active.dataset.k;
+    S.filter = S.filter === c ? null : c;
+    paintMap();
+    renderLegend();
+    if (S.sel == null) renderOverview();
+    if (selector) $(`${selector}[data-k="${focusedKey}"]`)?.focus({ preventScroll: true });
+  }
 
   // ---------------------------------------------------------------- hash
   function readHash() {
@@ -290,7 +351,12 @@
 
   // ---------------------------------------------------------------- render
   function render() {
-    document.querySelectorAll(".modes button").forEach((b) => b.setAttribute("aria-selected", b.dataset.mode === S.mode));
+    document.querySelectorAll('[role="tab"]').forEach((tab) => {
+      const selected = tab.dataset.mode === S.mode;
+      tab.setAttribute("aria-selected", selected);
+      tab.tabIndex = selected ? 0 : -1;
+    });
+    $("#panel").setAttribute("aria-labelledby", `tab-${S.mode}`);
     $("#yearbar").hidden = S.mode !== "year";
     $("#year").value = S.year; $("#yearout").textContent = S.year;
     paintMap(); renderPanel();
@@ -350,6 +416,7 @@
         <div class="keyrow"><span><i style="background:${COMP.fert}"></i>Fertility</span><span><i style="background:${COMP.mort}"></i>Mortality</span><span><i style="background:${COMP.mig}"></i>Migration</span></div>
         <p class="muted">Lines show each component’s contribution to the year-on-year change in the growth rate (per 1,000, three-year average). Above zero pushes towards growth; below zero towards decline.</p>`;
       C.querySelectorAll(".sigchart").forEach((d) => sigChart(d, SIGDATA[d.dataset.k]));
+      if (placeStats) C.insertAdjacentHTML("beforeend", characteristicsOverview());
     } else {
       C.innerHTML = `${kpis()}<p class="lead">Each year, every declining area is classed by its rate of change. In most years, between half and two-thirds of these areas were losing population. Two years stand out: 2011, when fast decline jumped to a third of areas, and 2016, when one in five briefly grew — much of it in Germany.</p>
         <h2>Share of declining areas by annual state</h2><div id="statechart"></div>
@@ -365,10 +432,9 @@
     const tags = [];
     if (r.trajectory != null) tags.push(`<span class="tag">${swatch(r.trajectory)}${TRAJ[r.trajectory].name}</span>`);
     if (r.signature != null) tags.push(`<span class="tag"><span class="sw" style="background:${SIG[r.signature].color}"></span>${SIG[r.signature].name}</span>`);
-    // coast flag withheld until the variable's definition is confirmed (e.g. North Ossetia is flagged coastal)
     const declined = r.trajectory != null || r.signature != null || r.states;
     let html = `<button class="back" id="back">← All areas</button><div class="place">
-      <h2 class="name">${esc(r.name)}</h2><p class="where">${esc(where)}</p><div class="tags">${tags.join("")}</div>`;
+      <h2 class="name" tabindex="-1">${esc(r.name)}</h2><p class="where">${esc(where)}</p><div class="tags">${tags.join("")}</div>`;
     if (!declined) {
       html += `<div class="card"><p>This area’s population grew overall between 2000 and 2018, so it is not part of the decline analyses. It is shown in pale grey for context.</p></div>`;
     } else {
@@ -379,6 +445,11 @@
         <div class="keyrow"><span><i style="background:${COMP.nat}"></i>Births minus deaths</span><span><i style="background:${COMP.mig}"></i>Net migration</span><span><i style="background:var(--ink);border-radius:50%"></i>Total change</span></div>
         <p class="muted">Per 1,000 residents each year.</p><div id="drvtable"></div>`;
       if (r.signature != null) html += `<div class="card" style="margin-top:14px"><h3>${SIG[r.signature].name}</h3><p>${SIG[r.signature].desc}</p></div>`;
+    }
+    if (r.place) html += placeCharacteristics(r);
+    if (CONFIG.showCoast && r.coast_km != null) {
+      html += `<p>Distance to the Natural Earth shoreline: ${r.coast_km} km.
+        Boundary file coastal flag: ${r.coast == null ? "unavailable" : r.coast ? "yes" : "no"}.</p>`;
     }
     html += `</div>`;
     C.innerHTML = html;
@@ -393,6 +464,87 @@
   }
   function highlightYear() {
     d3.selectAll("#seq rect.cell").attr("stroke", (d) => (d.year === S.year ? "var(--ink)" : "none"));
+  }
+
+  // ---------------------------------------------------------------- place characteristics (2011)
+  const PLACE_FIELDS = [
+    ["aged_65_pct", "Aged 65 or over", "%"],
+    ["foreign_born_pct", "Foreign-born", "%"],
+    ["unemployment_pct", "Unemployment", "%"],
+    ["distance_city_1m_km", "Distance to a city of over 1 million", " km"],
+    ["distance_coast_km", "Distance to the coast", " km"],
+    ["mean_altitude_m", "Mean altitude", " m"],
+  ];
+  const PLACE_TYPES = ["urban", "intermediate", "rural"];
+  const placeValue = (value, unit) => value == null ? "—" : `${d3.format(",.1~f")(value)}${unit}`;
+  const percentile = (sample, value) => 100 * sample.reduce(
+    (rank, item) => rank + (item < value ? 1 : item === value ? 0.5 : 0), 0
+  ) / sample.length;
+
+  function summarisePlaces(regions) {
+    const areas = regions.filter((region) => region.signature != null && region.place);
+    if (!areas.length) return null;
+    const samples = Object.fromEntries(PLACE_FIELDS.map(([key]) => [
+      key, areas.map((region) => region.place[key]).filter(Number.isFinite),
+    ]));
+    const bySignature = Object.fromEntries(SIG_ORDER.map((signature) => {
+      const members = areas.filter((region) => region.signature === signature);
+      const medians = Object.fromEntries(PLACE_FIELDS.map(([key]) => [
+        key, d3.median(members, (region) => region.place[key]),
+      ]));
+      const types = PLACE_TYPES.map((type) => members.filter((region) => region.place.settlement_type === type).length);
+      const largest = Math.max(...types);
+      const typical = largest ? PLACE_TYPES.filter((_, i) => types[i] === largest).join(", ") : "—";
+      return [signature, { medians, typical }];
+    }));
+    return { samples, bySignature, areaCount: areas.length };
+  }
+
+  function placeCharacteristics(region) {
+    const { place, signature } = region;
+    const medians = placeStats.bySignature[signature].medians;
+    const rows = PLACE_FIELDS.filter(([key]) => Number.isFinite(place[key])).map(([key, label, unit]) => {
+      const value = place[key], middle = medians[key], sample = placeStats.samples[key];
+      return { label, value: placeValue(value, unit), median: placeValue(middle, unit),
+               rank: percentile(sample, value), medianRank: percentile(sample, middle), n: sample.length };
+    });
+    const type = place.settlement_type;
+    return `<section class="characteristics" aria-labelledby="place-characteristics-title">
+      <h2 id="place-characteristics-title">What sort of place is this?</h2>
+      ${rows.length ? `<p class="muted">2011. Dots show percentiles among declining areas with data. Ticks mark the median of this area’s signature.</p>
+        <ul class="rank-list">${rows.map(({ label, value, rank, medianRank }) => `
+          <li><span>${label}</span><strong>${value}</strong>
+          <span class="rank-strip" aria-hidden="true"><i style="left:${medianRank}%"></i><b style="left:${rank}%"></b></span></li>`).join("")}</ul>` : ""}
+      ${type ? `<p>Settlement type: <strong>${esc(type)}</strong></p>` : ""}
+      <details class="table"><summary>Show place characteristics as a table</summary>
+        <table aria-label="Place characteristics in 2011">
+          <thead><tr><th scope="col">Indicator</th><th scope="col">Area</th><th scope="col">Percentile</th><th scope="col">Signature median</th><th scope="col">Areas</th></tr></thead>
+          <tbody>${rows.map(({ label, value, rank, median, n }) => `<tr><th scope="row">${label}</th><td>${value}</td><td>${Math.round(rank)}</td><td>${median}</td><td>${n}</td></tr>`).join("")}
+            ${type ? `<tr><th scope="row">Settlement type</th><td>${esc(type)}</td><td>—</td><td>—</td><td>—</td></tr>` : ""}
+          </tbody>
+        </table>
+      </details>
+    </section>`;
+  }
+
+  function characteristicsOverview() {
+    const headings = { 4: "Steady", 3: "Volatile", 2: "Natural", 1: "Migration &amp; fertility", 5: "Migration resurgence" };
+    return `<section class="characteristics" aria-labelledby="characteristics-overview-title">
+      <h2 id="characteristics-overview-title">Place characteristics in 2011</h2>
+      <p class="muted">Medians and most common settlement type by signature, using available values from ${fmt(placeStats.areaCount)} areas.</p>
+      <div class="characteristics-table" tabindex="0" role="region" aria-label="Scrollable signature comparison">
+        <table aria-labelledby="characteristics-overview-title">
+          <thead><tr><th scope="col">Indicator</th>${SIG_ORDER.map((key) =>
+            `<th scope="col" aria-label="${esc(SIG[key].name)}">${headings[key]}</th>`).join("")}</tr></thead>
+          <tbody>${PLACE_FIELDS.map(([field, label, unit]) =>
+            `<tr><th scope="row">${label}</th>${SIG_ORDER.map((key) =>
+              `<td>${placeValue(placeStats.bySignature[key].medians[field], unit)}</td>`).join("")}</tr>`).join("")}
+            <tr><th scope="row">Settlement type</th>${SIG_ORDER.map((key) =>
+              `<td>${placeStats.bySignature[key].typical}</td>`).join("")}</tr>
+          </tbody>
+        </table>
+      </div>
+    </section>`;
   }
 
   // ---------------------------------------------------------------- charts

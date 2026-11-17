@@ -13,7 +13,7 @@ const ready = async (page, hash = "") => {
 test("loads the map with every area and no errors", async ({ page }) => {
   const errors = await ready(page);
   const n = await page.locator("#map path.region").count();
-  expect(n).toBeGreaterThan(2000);
+  expect(n).toBe(2042);
   expect(errors).toEqual([]);
 });
 
@@ -88,7 +88,8 @@ test("tapping a region selects it", async ({ page, isMobile }) => {
   }
 });
 
-test("layout fits the screen without horizontal scrolling", async ({ page }) => {
+test("layout fits the screen without horizontal scrolling", async ({ page }, info) => {
+  if (info.project.name === "small-phone") await page.setViewportSize({ width: 320, height: 667 });
   await ready(page, "#r=7");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
@@ -96,7 +97,7 @@ test("layout fits the screen without horizontal scrolling", async ({ page }) => 
 
 test("primary controls meet the 44px touch-target minimum", async ({ page }) => {
   await ready(page, "#v=year");
-  for (const sel of ["#q", "#tab-traj", "#tab-year", "#tab-sig", "#zin", "#zout", "#zreset", "#play"]) {
+  for (const sel of ["#q", "#tab-traj", "#tab-year", "#tab-sig", "#zin", "#zout", "#zreset", "#play", "#legend .chip"]) {
     const b = await page.locator(sel).boundingBox();
     expect(b.height, sel).toBeGreaterThanOrEqual(43.5);
   }
