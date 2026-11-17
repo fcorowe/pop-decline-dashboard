@@ -42,8 +42,11 @@ test("year slider updates map and label", async ({ page }) => {
   await expect(page).toHaveURL(/y=2016/);
 });
 
-test("legend chip isolates a category", async ({ page }) => {
+test("legend chip isolates a category", async ({ page, isMobile }) => {
   await ready(page);
+  const legend = page.locator("#legend");
+  await expect(legend).toHaveJSProperty("open", !isMobile);
+  if (isMobile) await legend.locator("summary").click();
   await page.locator("#legend .chip").first().click();
   await expect(page.locator("#legend .chip").first()).toHaveAttribute("aria-pressed", "true");
   const dim = await page.locator("#map path.region.dim").count();
@@ -95,8 +98,9 @@ test("layout fits the screen without horizontal scrolling", async ({ page }, inf
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-test("primary controls meet the 44px touch-target minimum", async ({ page }) => {
+test("primary controls meet the 44px touch-target minimum", async ({ page, isMobile }) => {
   await ready(page, "#v=year");
+  if (isMobile) await page.locator("#legend summary").click();
   for (const sel of ["#q", "#tab-traj", "#tab-year", "#tab-sig", "#zin", "#zout", "#zreset", "#play", "#legend .chip:first-child"]) {
     const b = await page.locator(sel).boundingBox();
     expect(b.height, sel).toBeGreaterThanOrEqual(43.5);
@@ -112,6 +116,24 @@ test("body text is readable (≥ 14px) and uses the hyperlegible font", async ({
   });
   expect(r.size).toBeGreaterThanOrEqual(14);
   expect(r.loaded).toBe(true);
+});
+
+test("atlas refits across the mobile breakpoint and keeps the selected region", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop");
+  await ready(page);
+  await page.getByLabel("Find a region").fill("Dibër");
+  await page.getByLabel("Find a region").press("Enter");
+  await expect(page.getByRole("heading", { name: "Dibër" })).toBeFocused();
+  for (const width of [390, 1200]) {
+    await page.setViewportSize({ width, height: 800 });
+    await expect(page.locator("#legend")).toHaveJSProperty("open", width >= 900);
+    await expect.poll(() => page.locator("#map").evaluate((box) => {
+      const view = box.querySelector("svg").viewBox.baseVal;
+      return view.width === box.clientWidth && view.height === box.clientHeight;
+    })).toBe(true);
+    await expect(page.locator(".place h2.name")).toHaveText("Dibër");
+    await expect(page.locator("#scale-label")).toHaveText(/[0-9]+ km/);
+  }
 });
 
 test("total transfer stays within the lightweight budget", async ({ page }) => {

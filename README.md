@@ -19,9 +19,10 @@ State is kept in the URL (`#v=year&y=2011&r=7`), so any view can be shared as a 
 ## Design choices
 
 - **No framework, no build step.** Static HTML + D3 v7 + TopoJSON, all vendored (no CDN calls). ~0.5 MB gzipped in total.
-- **Font:** Atkinson Hyperlegible Next (Braille Institute, OFL), self-hosted, Latin + Latin Extended for place names.
+- The masthead uses the [official GDSL logo](https://github.com/GDSL-UL/branding/blob/master/logo_1.svg), cropped to the emblem alongside the lab name.
+- The Editorial Atlas pairs Source Serif 4 headings with Atkinson Hyperlegible Next for search, tabs, map keys and body text. Both fonts are self-hosted.
 - **Colour:** every categorical palette checked with a CVD validator (protan/deutan/tritan simulation, all-pairs for maps). Seven trajectories cannot be separated safely by hue alone, so the map uses 4 hues × texture (solid/striped). Lighter hues are always paired with text labels, and every chart has a legend or a table view.
-- **Mobile first:** 44 px touch targets, sticky tabs, map at 58% of the viewport, details below with a "details ↓" pill; tested on iPhone SE / 13 and Pixel 7 profiles.
+- On desktop, the atlas key and region details sit to the left of the map. On phones, sticky tabs sit above the map, with a collapsible key and a region details shortcut below. Primary controls have 44 px touch targets.
 
 ## Layout
 

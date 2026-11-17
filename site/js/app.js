@@ -60,7 +60,7 @@
 
   // ---------------------------------------------------------------- state
   const S = { mode: "traj", year: 2001, sel: null, filter: null, playing: null, k: 1 };
-  let DATA, BY_ID, SIGDATA, paths, gMap, svg, zoom, path, features, placeStats;
+  let DATA, BY_ID, SIGDATA, paths, gMap, svg, zoom, path, features, placeStats, refreshMapReference;
 
   const $ = (s) => document.querySelector(s);
   const el = (tag, attrs = {}, html = "") => {
@@ -125,7 +125,9 @@
     features = topojson.feature(topo, topo.objects.regions).features
       .filter((f) => BY_ID.has(f.properties.id));
     readHash();
-    initMap();
+    const borders = topojson.mesh(topo, topo.objects.regions, (a, b) =>
+      a !== b && BY_ID.get(a.properties.id)?.country !== BY_ID.get(b.properties.id)?.country);
+    initMap(borders);
     initUI();
     render();
     $("#loading").remove();
@@ -136,11 +138,10 @@
   });
 
   // ---------------------------------------------------------------- map
-  function initMap() {
+  function initMap(borders) {
     const box = $("#map");
-    const W = box.clientWidth, H = box.clientHeight;
-    svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("preserveAspectRatio", "xMidYMid meet");
-
+    let W = box.clientWidth, H = box.clientHeight;
+    svg = d3.select(box).append("svg").attr("viewBox", `0 0 ${W} ${H}`);
     const defs = svg.append("defs");
     for (const [key, f] of Object.entries(FAM)) {
       const p = defs.append("pattern").attr("id", `hatch-${key}`).attr("patternUnits", "userSpaceOnUse")
@@ -151,21 +152,48 @@
 
     const proj = d3.geoAzimuthalEqualArea().rotate([-15, -52]);
     const frame = { type: "Feature", geometry: { type: "MultiPoint", coordinates: [[-10, 34], [30, 34], [-10, 70], [38, 70], [44, 48]] } };
-    const pad = isMobile() ? 6 : 16;
-    proj.fitExtent([[pad, pad], [W - pad, H - pad]], frame);
+    const fit = () => {
+      const pad = isMobile() ? 5 : 12;
+      proj.fitExtent([[pad, pad], [W - pad, H - pad]], frame);
+    };
+    fit();
     path = d3.geoPath(proj);
 
     gMap = svg.append("g");
+    const grid = gMap.append("path").attr("class", "graticule").attr("aria-hidden", "true")
+      .datum(d3.geoGraticule().extent([[-65, 5], [150, 85]]).step([10, 10])()).attr("d", path);
     paths = gMap.append("g").selectAll("path").data(features, (d) => d.properties.id).join("path")
       .attr("class", "region hit").attr("d", path)
       .on("pointermove", onHover).on("pointerleave", hideTip)
       .on("click", (ev, d) => { ev.stopPropagation(); select(d.properties.id); });
+    const outlines = gMap.append("path").datum(borders).attr("class", "country-lines").attr("d", path);
+    const seas = [
+      { name: "Atlantic Ocean", at: [-20, 48] }, { name: "Norwegian Sea", at: [-1, 67] },
+      { name: "North Sea", at: [2.0, 57] }, { name: "Black Sea", at: [34, 43.3] },
+      { name: "Mediterranean Sea", at: [17, 34.7] },
+    ];
+    const labels = gMap.append("g").attr("class", "sea-names").attr("aria-hidden", "true")
+      .selectAll("text").data(seas).join("text").attr("class", "sea-label")
+      .text((d) => d.name);
+    const positionLabels = () => labels.attr("transform", (d) => `translate(${proj(d.at)})`);
+    function showLabels(transform) {
+      labels.attr("visibility", (d) => {
+        const [x, y] = transform.apply(proj(d.at));
+        const halfWidth = d.name.length * (isMobile() ? 3 : 4.5) * transform.k;
+        const inFrame = x - halfWidth > 4 && x + halfWidth < W - 4 && y > 14 && y < H - 7;
+        const byTools = x + halfWidth > W - 64 && y < 158;
+        const bySlider = S.mode === "year" && y > H - 74;
+        return inFrame && !byTools && !bySlider && transform.k <= 1.6 ? null : "hidden";
+      });
+    }
+    positionLabels();
     gMap.append("path").attr("class", "sel-halo");
     gMap.append("path").attr("class", "sel");
 
     zoom = d3.zoom().duration(reducedMotion.matches ? 0 : 250).scaleExtent([0.6, 40]).translateExtent([[-W, -H], [2 * W, 2 * H]])
       .on("zoom", (ev) => {
         gMap.attr("transform", ev.transform);
+        updateReference(ev.transform);
         if (S.k !== ev.transform.k) {
           S.k = ev.transform.k;
           defs.selectAll("pattern").attr("patternTransform", `rotate(45) scale(${1 / Math.max(1, S.k ** 0.85)})`);
@@ -174,6 +202,45 @@
       });
     svg.call(zoom).on("dblclick.zoom", null);
     svg.on("click", () => { if (S.sel != null) select(null); });
+
+    // The scale refers to the parallel through the centre of the visible map.
+    function updateReference(transform) {
+      showLabels(transform);
+      const centre = [W / 2, H / 2], sample = 80;
+      const at = (dx) => proj.invert(transform.invert([centre[0] + dx, centre[1]]));
+      const perPixel = 6371.0088 * d3.geoDistance(at(-sample / 2), at(sample / 2)) / sample;
+      const scale = $(".scale");
+      scale.hidden = !Number.isFinite(perPixel) || perPixel <= 0;
+      if (scale.hidden) return;
+      const limit = perPixel * sample;
+      const unit = 10 ** Math.floor(Math.log10(limit));
+      const km = (limit >= 5 * unit ? 5 : limit >= 2 * unit ? 2 : 1) * unit;
+      $(".scale i").style.width = `${km / perPixel}px`;
+      $("#scale-label").textContent = `${fmt(km)} km`;
+    }
+    updateReference(d3.zoomIdentity);
+    refreshMapReference = () => updateReference(svg.node().__zoom);
+
+    new ResizeObserver(() => {
+      const w = box.clientWidth, h = box.clientHeight;
+      if (!w || !h || (w === W && h === H)) return;
+      const transform = svg.node().__zoom;
+      const centre = proj.invert(transform.invert([W / 2, H / 2]));
+      W = w; H = h;
+      fit();
+      svg.attr("viewBox", `0 0 ${W} ${H}`);
+      grid.attr("d", path);
+      outlines.attr("d", path);
+      paths.attr("d", path);
+      positionLabels();
+      paintMap();
+      zoom.translateExtent([[-W, -H], [2 * W, 2 * H]]);
+      const [cx, cy] = proj(centre);
+      const next = transform.k === 1 && transform.x === 0 && transform.y === 0
+        ? d3.zoomIdentity
+        : d3.zoomIdentity.translate(W / 2, H / 2).scale(transform.k).translate(-cx, -cy);
+      svg.interrupt().call(zoom.transform, next);
+    }).observe(box);
 
     $("#pill").onclick = () => $("#content").scrollIntoView({
       behavior: reducedMotion.matches ? "instant" : "smooth", block: "start",
@@ -224,6 +291,10 @@
 
   // ---------------------------------------------------------------- UI wiring
   function initUI() {
+    const compact = matchMedia("(max-width: 899px)");
+    const setKeyLayout = () => { $("#legend").open = !compact.matches; };
+    setKeyLayout();
+    compact.addEventListener("change", setKeyLayout);
     const tabs = [...document.querySelectorAll('[role="tab"]')];
     tabs.forEach((tab, index) => {
       tab.addEventListener("click", () => setMode(tab.dataset.mode));
@@ -297,6 +368,7 @@
     if (m === S.mode) return;
     S.mode = m; S.filter = null; stop();
     writeHash(); render();
+    $("#panel").scrollTop = 0;
   }
   function setYear(y) {
     S.year = y; $("#year").value = y; $("#yearout").textContent = y;
@@ -321,7 +393,7 @@
   }
   function select(id, zoomIn = false) {
     S.sel = id; writeHash(); paintMap(); renderPanel();
-    if (id == null) $("#pill").hidden = true;
+    if (!isMobile()) $("#panel").scrollTop = 0;
     if (id != null && zoomIn) zoomTo(id);
   }
   function setFilter(c) {
@@ -358,30 +430,44 @@
     });
     $("#panel").setAttribute("aria-labelledby", `tab-${S.mode}`);
     $("#yearbar").hidden = S.mode !== "year";
+    refreshMapReference();
     $("#year").value = S.year; $("#yearout").textContent = S.year;
     paintMap(); renderPanel();
   }
-  function renderPanel() { renderLegend(); S.sel == null ? renderOverview() : renderPlace(BY_ID.get(S.sel)); }
+  function renderPanel() {
+    const selected = S.sel != null;
+    $("#panel").classList.toggle("has-place", selected);
+    $("#pill").hidden = !selected;
+    $("#statistics").innerHTML = selected ? "" : kpis();
+    renderLegend();
+    if (selected) renderPlace(BY_ID.get(S.sel)); else renderOverview();
+  }
 
   function renderLegend() {
-    const L = $("#legend");
+    const L = $("#legend-body");
     const chip = (key, sw, label, count) =>
-      `<button class="chip${S.filter != null && S.filter !== key ? " off" : ""}" data-k="${key}" aria-pressed="${S.filter === key}">${sw}<span>${label}${count != null ? ` <span class="muted">${count}</span>` : ""}</span></button>`;
-    let html = "";
+      `<button class="chip${S.filter != null && S.filter !== key ? " off" : ""}" data-k="${key}" aria-pressed="${S.filter === key}">${sw}<span>${label}</span><span class="count" aria-label="${count} areas">${count}</span></button>`;
+    const counts = d3.rollup(DATA.regions, (v) => v.length, category);
+    let title, caption, rows, note;
     if (S.mode === "traj") {
-      const n = d3.rollup(DATA.regions, (v) => v.length, (r) => r.trajectory);
-      html = `<h2>Trajectory of decline</h2><div class="chips">${TRAJ.map((t, i) => chip(i, swatch(i), t.name, n.get(i))).join("")}</div>
-        <p class="note">Colour shows how decline evolved; <b>solid</b> = fast (over 1% a year), <b>striped</b> = moderate. Pale grey areas grew overall. Tap a label to isolate it.</p>`;
+      title = "Trajectory of decline";
+      caption = "Population trajectories, 2000–2018";
+      rows = TRAJ.map((t, i) => chip(i, swatch(i), t.name, counts.get(i) ?? 0));
+      note = "Solid colours mark fast decline (over 1% a year). Stripes mark the more moderate pathways.";
     } else if (S.mode === "sig") {
-      const n = d3.rollup(DATA.regions, (v) => v.length, (r) => r.signature);
-      html = `<h2>Demographic signature of decline</h2><div class="chips">${SIG_ORDER.map((k) => chip(k, `<span class="sw" style="background:${SIG[k].color}"></span>`, SIG[k].name, n.get(k))).join("")}</div>
-        <p class="note">Which mix of births, deaths and migration drove each area’s losses. Pale grey areas grew overall.</p>`;
+      title = "Demographic signatures";
+      caption = "Demographic drivers of decline, 2000–2018";
+      rows = SIG_ORDER.map((k) => chip(k, `<span class="sw" style="background:${SIG[k].color}"></span>`, SIG[k].name, counts.get(k) ?? 0));
+      note = "Each signature describes how births, deaths and migration contributed to population loss.";
     } else {
-      const n = d3.rollup(DATA.regions, (v) => v.length, (r) => r.states?.[yi()]);
-      html = `<h2>Population change in ${S.year}</h2><div class="chips">${STATE_ORDER.map((k) => chip(k, `<span class="sw" style="background:${STATE[k].color}"></span>`, STATE[k].name, n.get(k))).join("")}</div>
-        <p class="note">Annual change for areas that declined overall, 2000–2018. Press ▶ to watch the sequence unfold.</p>`;
+      title = `Population change in ${S.year}`;
+      caption = `Annual population change, ${S.year - 1}–${S.year}`;
+      rows = STATE_ORDER.map((k) => chip(k, `<span class="sw" style="background:${STATE[k].color}"></span>`, STATE[k].name, counts.get(k) ?? 0));
+      note = "Annual change is shown for areas that declined over the full study period.";
     }
-    L.innerHTML = html;
+    $("#legend h2").textContent = title;
+    $("#map-title").textContent = caption;
+    L.innerHTML = `<div class="chips">${rows.join("")}</div><p class="note">${note} Grey areas fall outside this classification. Select a label to filter the map.</p>`;
     L.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => setFilter(+b.dataset.k)));
   }
 
@@ -391,7 +477,7 @@
     const nAll = DATA.regions.length;
     return `<div class="kpis">
       <div class="kpi"><div class="v">${fmt(nAll)}</div><div class="l">areas mapped</div></div>
-      <div class="kpi"><div class="v">${fmt(S.mode === "sig" ? nS : nT)}</div><div class="l">declined 2000–18</div></div>
+      <div class="kpi"><div class="v">${fmt(S.mode === "sig" ? nS : nT)}</div><div class="l">declining areas</div></div>
       <div class="kpi"><div class="v">${S.mode === "sig" ? 5 : S.mode === "traj" ? 7 : 18}</div><div class="l">${S.mode === "sig" ? "signatures" : S.mode === "traj" ? "trajectories" : "years"}</div></div>
     </div>`;
   }
@@ -401,7 +487,7 @@
     if (S.mode === "traj") {
       const n = d3.rollup(DATA.regions, (v) => v.length, (r) => r.trajectory);
       const max = d3.max(TRAJ, (_, i) => n.get(i));
-      C.innerHTML = `${kpis()}<p class="lead">Decline is not one process. Sequence analysis of annual population change groups declining areas into seven pathways that differ in pace and timing — from relentless, fast losses in the east to recent or short-lived decline in the west and south.</p>
+      C.innerHTML = `<p class="lead">The seven trajectories trace how the pace of population loss changed across Europe. Select a region to explore its history.</p>
         <h2>The seven pathways</h2><ul class="rows">${TRAJ.map((t, i) => `<li><button class="rowbtn" data-k="${i}" aria-pressed="${S.filter === i}">
           ${swatch(i)}<span class="n">${t.name}</span><span>${n.get(i)} areas · −${t.loss}%</span>
           <span class="bar"><i style="width:${(100 * n.get(i)) / max}%;background:${FAM[t.fam].color}"></i></span>
@@ -409,7 +495,7 @@
         <p class="muted">Percentages give the combined population loss of each pathway, 2000–2018. Select any area on the map for its own story.</p>`;
     } else if (S.mode === "sig") {
       const n = d3.rollup(DATA.regions, (v) => v.length, (r) => r.signature);
-      C.innerHTML = `${kpis()}<p class="lead">Why did places shrink? Decomposing each area’s annual change into fertility, mortality and migration reveals five signatures. Natural decline (more deaths than births) is almost universal; migration decides how fast places lose people.</p>
+      C.innerHTML = `<p class="lead">Why did places shrink? Decomposing each area’s annual change into fertility, mortality and migration reveals five signatures. Natural decline (more deaths than births) is almost universal; migration decides how fast places lose people.</p>
         <h2>Five signatures</h2><div class="small-multiples">${SIG_ORDER.map((k) => `<div class="card">
           <button class="rowbtn" data-k="${k}" aria-pressed="${S.filter === k}" style="padding:0 0 6px"><span class="sw" style="background:${SIG[k].color}"></span><span class="n">${SIG[k].name}</span><span>${n.get(k)} areas</span></button>
           <p>${SIG[k].desc}</p><div class="sigchart" data-k="${k}"></div></div>`).join("")}</div>
@@ -418,7 +504,7 @@
       C.querySelectorAll(".sigchart").forEach((d) => sigChart(d, SIGDATA[d.dataset.k]));
       if (placeStats) C.insertAdjacentHTML("beforeend", characteristicsOverview());
     } else {
-      C.innerHTML = `${kpis()}<p class="lead">Each year, every declining area is classed by its rate of change. In most years, between half and two-thirds of these areas were losing population. Two years stand out: 2011, when fast decline jumped to a third of areas, and 2016, when one in five briefly grew — much of it in Germany.</p>
+      C.innerHTML = `<p class="lead">Each year, every declining area is classed by its rate of change. In most years, between half and two-thirds of these areas were losing population. Two years stand out: 2011, when fast decline jumped to a third of areas, and 2016, when one in five briefly grew — much of it in Germany.</p>
         <h2>Share of declining areas by annual state</h2><div id="statechart"></div>
         <p class="muted">Thresholds follow the median (0.3%) and standard deviation (0.99%) of annual change across European regions. The 2011 jump coincides with the census round, so part of it may reflect re-estimated populations rather than real change.</p>`;
       stateChart($("#statechart"));
@@ -457,10 +543,7 @@
     if (r.states) seqChart($("#seq"), r.states);
     if (r.rates) driverChart($("#drivers"), r.rates);
     const pill = $("#pill");
-    if (isMobile() && pill) {
-      pill.hidden = false;
-      pill.textContent = `${r.name} · details ↓`;
-    }
+    pill.textContent = `${r.name} · details ↓`;
   }
   function highlightYear() {
     d3.selectAll("#seq rect.cell").attr("stroke", (d) => (d.year === S.year ? "var(--ink)" : "none"));

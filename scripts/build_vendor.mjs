@@ -11,7 +11,7 @@ const { metafile } = await build({
       export { extent, max, median, min, rollup } from "d3-array";
       export { color } from "d3-color";
       export { format } from "d3-format";
-      export { geoAzimuthalEqualArea, geoPath } from "d3-geo";
+      export { geoAzimuthalEqualArea, geoDistance, geoGraticule, geoPath } from "d3-geo";
       export { interpolateRgb } from "d3-interpolate";
       export { scaleBand, scaleLinear } from "d3-scale";
       export { select, selectAll } from "d3-selection";
