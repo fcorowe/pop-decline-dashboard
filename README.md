@@ -56,7 +56,7 @@ npm run snapshots           # update expected images after reviewing intentional
 
 ## Data joins and caveats
 
-- All 696 trajectory areas and 732 signature areas match the published counts. Boundary centroids place the polygon labelled `Severnobanatska` closest to Zrenjanin, so the build relabels it as `Srednjobanatska` (Central Banat). The distinct `Severno-Banatski` polygon represents Northern Banat, and `Juznobanatska` represents Southern Banat. The original GeoPackage is unchanged.
+- All 696 trajectory areas and 732 signature areas match the published counts. Boundary centroids place the polygon labelled `Severnobanatska` closest to Zrenjanin, so the build relabels it as `Srednjobanatska` (Central Banat). The central centroid is 11.6 km from Zrenjanin. The distinct `Severno-Banatski` and `Juznobanatska` centroids are closest to their respective district seats, 23.1 km from Kikinda and 29.3 km from Pančevo. The original GeoPackage is unchanged.
 - Fuzzy matches from the handover are explicit in `scripts/name_crosswalk.csv`. The build rejects any new acceptable fuzzy candidate until its match is recorded. The review CSV lists each accepted source–boundary pair and the name similarity score. A score measures spelling similarity and does not establish geographic equivalence.
 - The Paper 2 demographic rates file determines the signature. The current build finds zero disagreements with the map mergesheet among the 732 joined areas. The build report records the two values and area name for any disagreement.
 - The simplified map keeps all 2,042 boundaries. Christiansø is restored from its original geometry because its rings collapse during simplification. The restoration refines the TopoJSON grid without shifting other boundaries. Chukotka's source rings are already split at the antimeridian.
@@ -81,6 +81,8 @@ To regenerate the 1,200 × 630 social image, start `npm run serve` and run `npm 
 ## Deployment and licence
 
 GitHub Actions runs the data and Chromium suites before deploying `site/` to [GitHub Pages](https://fcorowe.github.io/pop-decline-dashboard/). The CI job tests the committed derived bundle. The local determinism test requires the raw files.
+
+Visual baselines are platform-specific. To refresh Linux baselines, use the Ubuntu 24.04 CI environment with the pinned Playwright version, install Chromium with its system dependencies, and run `npm run snapshots -- --update-snapshots=all`. Compare the new files in `tests/visual.spec.js-snapshots/` with the previous Linux baselines and commit any intentional changes.
 
 Run smoke tests against the published project path:
 

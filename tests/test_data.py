@@ -81,9 +81,7 @@ def test_rates_and_mergesheet_comparison_is_auditable():
     assert rates["rows"] == rates["matched"] == 732
     disagreements = rates["signature_disagreements"]
     assert rates["signature_overridden_from_rates_file"] == len(disagreements)
-    assert not disagreements  # Current inputs agree after joining the complete study sample.
-    for row in disagreements:
-        assert REG[row["id"]]["signature"] == row["rates"] != row["mergesheet"]
+    assert disagreements == []  # The supplied inputs agree across the complete joined sample.
 
 
 def test_fuzzy_match_review_covers_the_explicit_crosswalk():

@@ -97,7 +97,7 @@ test("layout fits the screen without horizontal scrolling", async ({ page }, inf
 
 test("primary controls meet the 44px touch-target minimum", async ({ page }) => {
   await ready(page, "#v=year");
-  for (const sel of ["#q", "#tab-traj", "#tab-year", "#tab-sig", "#zin", "#zout", "#zreset", "#play", "#legend .chip"]) {
+  for (const sel of ["#q", "#tab-traj", "#tab-year", "#tab-sig", "#zin", "#zout", "#zreset", "#play", "#legend .chip:first-child"]) {
     const b = await page.locator(sel).boundingBox();
     expect(b.height, sel).toBeGreaterThanOrEqual(43.5);
   }

@@ -119,7 +119,7 @@ Claude inspected every fuzzy match and judged all of them correct. No two source
 
 ## 6. Decisions pending from Francisco
 
-- Data licence for the derived data (proposed CC BY 4.0) and Niall Newsham's agreement before the repository is made public.
+- Francisco confirmed CC BY 4.0 for the derived data and Niall Newsham’s agreement to public release on 2026-11-17.
 - Which coastal definition Paper 2 used.
 - A visual check of `data_review/matches_for_review.csv` once Codex produces it.
 - Delivery of the place-characteristics file (`../Paper 2 - Place attributes.csv`).
@@ -130,6 +130,6 @@ Claude inspected every fuzzy match and judged all of them correct. No two source
 | Date | Who | Entry |
 |---|---|---|
 | 2026-11-17 | Claude | Read both papers and the raw data; designed and built the dashboard, the data pipeline and the tests; 72/72 tests pass; wrote CODEX_PROMPT.md and this log. |
-| | Codex | *(append entries here: date, what changed, tests status, open questions)* |
 | 2026-11-17 | Codex | Part 1. Committed ten approved macOS screenshots before changing the application, pinned dependencies, verified byte-identical data rebuilds, and reduced the D3 bundle from 281 KB to 113 KB. All ten screenshots passed against the original baselines. The original UI suite intermittently lost its local server connection, so browser tests now bind explicitly to IPv4. |
 | 2026-11-17 | Codex | Part 2. Matched 696 trajectories and 732 signatures, recovered Christiansø, verified the Chukotka projection and recorded 116 fuzzy pairs and the independent coastline comparison. The supplied signature sources agree for all 732 joins. Added keyboard and motion support, axe and Android performance tests, optional place profiles, an About & cite dialog, a social image and a favicon. Updated screenshots for the corrected counts and boundary, larger controls, darker secondary text and footer link. |
+| 2026-11-17 | Codex | Part 3. Francisco confirmed CC BY 4.0 and co-author consent. Created the public repository, enabled GitHub Actions for Pages, compared the original and hardened Linux snapshots, and added the CI and deployed-path smoke checks. The Resources card rendered at desktop and mobile widths with the existing dark styling and passed Netlify preflight. The full local run passed 14 data tests and 94 browser checks. |
