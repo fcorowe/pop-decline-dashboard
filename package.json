@@ -1,0 +1,21 @@
+{
+  "name": "pop-decline-dashboard",
+  "version": "1.0.0",
+  "description": "Interactive dashboard of European sub-national population decline, 2000-2018",
+  "scripts": {
+    "build:data": "python3 scripts/build_data.py",
+    "serve": "python3 -m http.server 8000 -d site",
+    "test": "python3 -m pytest tests -q && playwright test",
+    "test:ui": "playwright test"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@fontsource/atkinson-hyperlegible-next": "^5.3.0",
+    "@playwright/test": "^1.65.1",
+    "d3": "^7.9.2",
+    "mapshaper": "^0.6.121",
+    "topojson-client": "^3.1.0"
+  },
+  "private": true
+}

@@ -1,0 +1,31 @@
+country,source_name,map_name,note
+RU,Nizhny Novgorod Region,Nizhegorod,transliteration
+RU,Kemerovo Region - Kuzbass,Kemerovo,transliteration
+RU,Magadan Region,Maga Buryatdan,boundary file label for Magadan
+RU,Oryol Region,Orel,transliteration
+RU,Yaroslavskaya oblast,Yaroslavl',transliteration
+RU,The Republic of Buryatia,Buryat,transliteration
+RU,The Republic of Mordovia,Mordovia,transliteration
+RU,The Republic of Khakassia,Khakass,transliteration
+RU,Chuvash Republic - Chuvashia,Chuvash,transliteration
+RU,Jewish Autonomous Region,Yevrey,transliteration
+IS,Northwest,Norðurland vestra,English vs Icelandic name
+IS,Westfjords,Vestfirðir,English vs Icelandic name
+CZ,Brno-mesto,Brno,city district
+CZ,Brno-m?sto,Brno,city district (encoding loss in source)
+CZ,?eská Lípa,Ceska Lipa,encoding loss in source
+CZ,D??ín,Decin,encoding loss in source
+CZ,Krom??íž,Kromeriz,encoding loss in source
+CZ,T?ebí?,Trebic,encoding loss in source
+PL,KRO?NIE?SKI,Krosnienski,encoding loss in source
+PL,?ÓD?,Miasto Lodz,encoding loss in source
+PL,?OM?Y?SKI,Lomzynski,encoding loss in source
+PL,OSTRO??CKI,Ostrolecki,encoding loss in source
+PL,O?WI?CIMSKI,Oswiecimski,encoding loss in source
+PL,P?OCKI,Plocki,encoding loss in source
+PL,POZNA?,Miasto Poznan,encoding loss in source
+PL,SZCZECIN,Miasto Szczecin,city
+PL,SZCZECI?SKI,Szczecinski,encoding loss in source
+PL,W?OC?AWSKI,Wloclawski,encoding loss in source
+DE,"Weiden in der Oberpfalz, Kreisfreie Stadt","Weiden i. d. Opf, Kreisfreie Stadt",abbreviation
+ML,Calarasi,Calarasi.M,Moldovan Calarasi (distinct from Romanian Calarasi)
