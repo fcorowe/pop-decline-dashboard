@@ -72,10 +72,28 @@ test("deep link restores mode, year and region", { tag: "@smoke" }, async ({ pag
   await expect(page.locator(".place h2.name")).toHaveText("Brest");
 });
 
-test("growing areas explain why they have no decline data", async ({ page }) => {
+test("context areas do not imply population growth", async ({ page }) => {
   await ready(page, "#r=0");
-  await expect(page.locator(".place")).toContainText("grew overall");
+  await expect(page.locator(".place")).toContainText("No study data are shown for this area.");
 });
+
+for (const [mode, id, name, label] of [
+  ["traj", 416, "Vorpommern-Rügen", "No trajectory classification"],
+  ["sig", 1347, "Miasto Wroclaw", "No demographic signature"],
+]) {
+  test(`tooltip distinguishes missing ${mode} classification from growth`, async ({ page }) => {
+    await ready(page, `#v=${mode}`);
+    await page.locator("#map path.region").evaluateAll((paths, id) => {
+      const region = paths.find((path) => path.__data__?.properties.id === id);
+      if (!region) throw new Error(`Region ${id} not on map`);
+      region.dispatchEvent(new PointerEvent("pointermove", { pointerType: "mouse", bubbles: true, clientX: 300, clientY: 300 }));
+    }, id);
+    const tip = page.locator("#tip");
+    await expect(tip).toBeVisible();
+    await expect(tip).toContainText(name);
+    await expect(tip).toContainText(label);
+  });
+}
 
 test("tapping a region selects it", async ({ page, isMobile }) => {
   await ready(page);
