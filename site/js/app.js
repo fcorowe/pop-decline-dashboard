@@ -102,8 +102,8 @@
     return STATE[c].color;
   }
   function labelFor(r) {
-    if (S.mode === "traj") return r.trajectory != null ? TRAJ[r.trajectory].name : "Grew overall, 2000–18";
-    if (S.mode === "sig") return r.signature ? SIG[r.signature].name : "Grew overall, 2000–18";
+    if (S.mode === "traj") return r.trajectory != null ? TRAJ[r.trajectory].name : "No trajectory classification";
+    if (S.mode === "sig") return r.signature ? SIG[r.signature].name : "No demographic signature";
     const v = r.states?.[yi()];
     return v != null ? `${STATE[v].name} in ${S.year}` : "Not in the decline analysis";
   }
@@ -522,7 +522,7 @@
     let html = `<button class="back" id="back">← All areas</button><div class="place">
       <h2 class="name" tabindex="-1">${esc(r.name)}</h2><p class="where">${esc(where)}</p><div class="tags">${tags.join("")}</div>`;
     if (!declined) {
-      html += `<div class="card"><p>This area’s population grew overall between 2000 and 2018, so it is not part of the decline analyses. It is shown in pale grey for context.</p></div>`;
+      html += `<div class="card"><p>No study data are shown for this area. It is shown in pale grey for context.</p></div>`;
     } else {
       if (r.change != null) html += `<div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><div class="v">${r.change > 0 ? "+" : "−"}${fmt(Math.abs(r.change))}</div><div class="l">people, 2000–2018</div></div>${r.states ? `<div class="kpi"><div class="v">${r.states.filter((s) => s != null && s < 0).length}<span style="font-size:1rem"> of ${r.states.filter((s) => s != null).length}</span></div><div class="l">years in decline</div></div>` : ""}</div>`;
       if (r.states) html += `<h2>Year by year</h2><div id="seq"></div>`;
